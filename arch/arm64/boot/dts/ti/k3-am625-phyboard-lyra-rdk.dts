@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2022 PHYTEC Messtechnik GmbH
+ * Author: Wadim Egorov <w.egorov@phytec.de>
+ */
+
+/dts-v1/;
+
+#include "k3-am625.dtsi"
+#include "k3-am62-phycore-som.dtsi"
+#include "k3-am62-phyboard-lyra.dtsi"
+
+/ {
+	model = "PHYTEC phyBOARD-Lyra AM625";
+	compatible = "phytec,am625-phyboard-lyra-rdk",
+		     "phytec,am62-phycore-som", "ti,am625";
+};
