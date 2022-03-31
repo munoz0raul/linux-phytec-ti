@@ -43,6 +43,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am642-evm-icssg1-dualemac-mii.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am642-evm-nand.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am642-phyboard-electra-rdk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am64-phyboard-electra-rdk-pcie-usb2.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am64-phyboard-electra-x27-uart3-spi1.dtbo
 
 dtb-$(CONFIG_ARCH_K3) += k3-am642-sk.dtb
 
