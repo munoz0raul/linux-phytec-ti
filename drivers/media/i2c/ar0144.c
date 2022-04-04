@@ -1964,7 +1964,7 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 		.ops		= &ar0144_ctrl_ops,
 		.id		= V4L2_CID_ANALOGUE_GAIN,
 		.type		= V4L2_CTRL_TYPE_INTEGER,
-		.min		= 1000,
+		.min		= 1684,
 		.step		= 1,
 		.max		= 16000,
 		.def		= 2000,
@@ -2019,6 +2019,7 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 		.name		= "Analogue Gain Auto Min",
 		.min		= 0,
 		.max		= ARRAY_SIZE(ar0144_ana_gain_min_menu) - 1,
+		.def		= 1,
 		.qmenu		= ar0144_ana_gain_min_menu,
 	}, {
 		.ops		= &ar0144_ctrl_ops,
