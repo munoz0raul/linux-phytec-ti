@@ -2724,6 +2724,35 @@ static const struct panel_desc logictechno_lt170410_2whc = {
 	.connector_type = DRM_MODE_CONNECTOR_LVDS,
 };
 
+static const struct drm_display_mode lincolntech_lcd185_101ct_mode = {
+	.clock = 77560,
+	.hdisplay = 960,
+	.hsync_start = 960 + 6,
+	.hsync_end = 960 + 6 + 10,
+	.htotal = 960 + 6 + 10 + 64,
+	.vdisplay = 1200,
+	.vsync_start = 1200 + 20,
+	.vsync_end = 1200 + 20 + 4,
+	.vtotal = 1200 + 20 + 4 + 19,
+};
+
+static const struct panel_desc lincolntech_lcd185_101ct = {
+	.modes = &lincolntech_lcd185_101ct_mode,
+	.bpc = 8,
+	.num_modes = 1,
+	.size = {
+		.width = 217,
+		.height = 136,
+	},
+	.delay = {
+		.prepare = 50,
+		.disable = 50,
+	},
+	.bus_flags = DRM_BUS_FLAG_DE_HIGH,
+	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
+	.connector_type = DRM_MODE_CONNECTOR_LVDS,
+};
+
 static const struct drm_display_mode mitsubishi_aa070mc01_mode = {
 	.clock = 30400,
 	.hdisplay = 800,
@@ -4184,6 +4213,9 @@ static const struct of_device_id platform_of_match[] = {
 	}, {
 		.compatible = "logictechno,lt170410-2whc",
 		.data = &logictechno_lt170410_2whc,
+	}, {
+		.compatible = "lincolntech,lcd185-101ct",
+		.data = &lincolntech_lcd185_101ct,
 	}, {
 		.compatible = "mitsubishi,aa070mc01-ca1",
 		.data = &mitsubishi_aa070mc01,
