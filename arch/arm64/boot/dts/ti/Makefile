@@ -76,6 +76,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am642-sk.dtb
 
 dtb-$(CONFIG_ARCH_K3) += k3-am625-phyboard-lyra-rdk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-m2-wifi.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-x39-spi0.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am625-sk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62x-lp-sk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am625-skeleton.dtb
