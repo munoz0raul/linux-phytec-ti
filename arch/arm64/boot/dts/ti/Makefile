@@ -50,6 +50,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-lpmdemo.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am625-sk-csi2-ov5640.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am625-phyboard-lyra-rdk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-m2-wifi.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-x39-spi0.dtbo
 
 dtb-$(CONFIG_ARCH_K3) += k3-j721e-fpdlink-cpb-fusion.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-j721e-fpdlink-sk-fusion.dtbo
