@@ -496,10 +496,10 @@ static int ar0144_read(struct ar0144 *sensor, u16 reg, u16 *val);
 static int ar0144_write(struct ar0144 *sensor, u16 reg, u16 val);
 static int ar0144_s_stream(struct v4l2_subdev *sd, int enable);
 static int ar0144_set_selection(struct v4l2_subdev *sd,
-				struct v4l2_subdev_pad_config *cfg,
+				struct v4l2_subdev_state *sd_state,
 				struct v4l2_subdev_selection *sel);
 static int ar0144_set_fmt(struct v4l2_subdev *sd,
-			  struct v4l2_subdev_pad_config *cfg,
+			  struct v4l2_subdev_state *sd_state,
 			  struct v4l2_subdev_format *format);
 
 
@@ -585,7 +585,7 @@ static int ar0144_vv_set_sensormode(struct ar0144 *sensor, void *args)
 {
 	struct device *dev = sensor->subdev.dev;
 	struct v4l2_subdev *sd = &sensor->subdev;
-	struct v4l2_subdev_pad_config cfg;
+	struct v4l2_subdev_state sd_state;
 	struct v4l2_subdev_selection sel;
 	struct v4l2_subdev_format format;
 	struct vvcam_mode_info_s mode;
@@ -628,11 +628,11 @@ static int ar0144_vv_set_sensormode(struct ar0144 *sensor, void *args)
 	format.format.height = ar0144_modes[index].height;
 	format.format.code = sensor->formats[bpp_to_index(bpp)].code;
 
-	ret = ar0144_set_selection(sd, &cfg, &sel);
+	ret = ar0144_set_selection(sd, &sd_state, &sel);
 	if (ret)
 		return ret;
 
-	ret = ar0144_set_fmt(sd, &cfg, &format);
+	ret = ar0144_set_fmt(sd, &sd_state, &format);
 	if (ret)
 		return ret;
 
@@ -1510,12 +1510,12 @@ static int ar0144_g_frame_interval(struct v4l2_subdev *sd,
 }
 
 static struct v4l2_rect *ar0144_get_pad_crop(struct ar0144 *sensor,
-					     struct v4l2_subdev_pad_config *cfg,
+					     struct v4l2_subdev_state *sd_state,
 					     unsigned int pad, u32 which)
 {
 	switch (which) {
 	case V4L2_SUBDEV_FORMAT_TRY:
-		return v4l2_subdev_get_try_crop(&sensor->subdev, cfg, pad);
+		return v4l2_subdev_get_try_crop(&sensor->subdev, sd_state, pad);
 	case V4L2_SUBDEV_FORMAT_ACTIVE:
 		return &sensor->crop;
 	default:
@@ -1524,12 +1524,12 @@ static struct v4l2_rect *ar0144_get_pad_crop(struct ar0144 *sensor,
 }
 
 static struct v4l2_mbus_framefmt *ar0144_get_pad_fmt(struct ar0144 *sensor,
-					    struct v4l2_subdev_pad_config *cfg,
+					    struct v4l2_subdev_state *sd_state,
 					    unsigned int pad, u32 which)
 {
 	switch (which) {
 	case V4L2_SUBDEV_FORMAT_TRY:
-		return v4l2_subdev_get_try_format(&sensor->subdev, cfg, pad);
+		return v4l2_subdev_get_try_format(&sensor->subdev, sd_state, pad);
 	case V4L2_SUBDEV_FORMAT_ACTIVE:
 		return &sensor->fmt;
 	default:
@@ -1563,7 +1563,7 @@ static unsigned int ar0144_find_skipfactor(unsigned int input,
 
 /* V4L2 subdev pad ops */
 static int ar0144_enum_mbus_code(struct v4l2_subdev *sd,
-				 struct v4l2_subdev_pad_config *cfg,
+				 struct v4l2_subdev_state *sd_state,
 				 struct v4l2_subdev_mbus_code_enum *code)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1577,7 +1577,7 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd,
 }
 
 static int ar0144_enum_frame_size(struct v4l2_subdev *sd,
-				  struct v4l2_subdev_pad_config *cfg,
+				  struct v4l2_subdev_state *sd_state,
 				  struct v4l2_subdev_frame_size_enum *fse)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1587,8 +1587,8 @@ static int ar0144_enum_frame_size(struct v4l2_subdev *sd,
 
 	mutex_lock(&sensor->lock);
 
-	fmt = ar0144_get_pad_fmt(sensor, cfg, fse->pad, fse->which);
-	crop = ar0144_get_pad_crop(sensor, cfg, fse->pad, fse->which);
+	fmt = ar0144_get_pad_fmt(sensor, sd_state, fse->pad, fse->which);
+	crop = ar0144_get_pad_crop(sensor, sd_state, fse->pad, fse->which);
 
 	if (fse->index >= 4 || fse->code != fmt->code) {
 		ret = -EINVAL;
@@ -1620,7 +1620,7 @@ static unsigned int ar0144_get_vlength(struct ar0144 *sensor)
 }
 
 static int ar0144_set_fmt(struct v4l2_subdev *sd,
-			  struct v4l2_subdev_pad_config *cfg,
+			  struct v4l2_subdev_state *sd_state,
 			  struct v4l2_subdev_format *format)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1635,8 +1635,8 @@ static int ar0144_set_fmt(struct v4l2_subdev *sd,
 
 	mutex_lock(&sensor->lock);
 
-	fmt = ar0144_get_pad_fmt(sensor, cfg, format->pad, format->which);
-	crop = ar0144_get_pad_crop(sensor, cfg, format->pad,
+	fmt = ar0144_get_pad_fmt(sensor, sd_state, format->pad, format->which);
+	crop = ar0144_get_pad_crop(sensor, sd_state, format->pad,
 				   V4L2_SUBDEV_FORMAT_ACTIVE);
 
 	if (sensor->model == AR0144_MODEL_COLOR)
@@ -1677,7 +1677,7 @@ static int ar0144_set_fmt(struct v4l2_subdev *sd,
 }
 
 static int ar0144_get_fmt(struct v4l2_subdev *sd,
-			  struct v4l2_subdev_pad_config *cfg,
+			  struct v4l2_subdev_state *sd_state,
 			  struct v4l2_subdev_format *format)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1685,7 +1685,7 @@ static int ar0144_get_fmt(struct v4l2_subdev *sd,
 
 	mutex_lock(&sensor->lock);
 
-	fmt = ar0144_get_pad_fmt(sensor, cfg, format->pad, format->which);
+	fmt = ar0144_get_pad_fmt(sensor, sd_state, format->pad, format->which);
 	format->format = *fmt;
 
 	mutex_unlock(&sensor->lock);
@@ -1694,7 +1694,7 @@ static int ar0144_get_fmt(struct v4l2_subdev *sd,
 }
 
 static int ar0144_set_selection(struct v4l2_subdev *sd,
-				struct v4l2_subdev_pad_config *cfg,
+				struct v4l2_subdev_state *sd_state,
 				struct v4l2_subdev_selection *sel)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1711,7 +1711,7 @@ static int ar0144_set_selection(struct v4l2_subdev *sd,
 
 	mutex_lock(&sensor->lock);
 
-	_crop = ar0144_get_pad_crop(sensor, cfg, sel->pad, sel->which);
+	_crop = ar0144_get_pad_crop(sensor, sd_state, sel->pad, sel->which);
 
 	/* Check againts max, min values */
 	max_w = sensor->limits.x.max - sensor->limits.x.min - 1;
@@ -1736,7 +1736,7 @@ static int ar0144_set_selection(struct v4l2_subdev *sd,
 }
 
 static int ar0144_get_selection(struct v4l2_subdev *sd,
-				struct v4l2_subdev_pad_config *cfg,
+				struct v4l2_subdev_state *sd_state,
 				struct v4l2_subdev_selection *sel)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
@@ -1750,7 +1750,7 @@ static int ar0144_get_selection(struct v4l2_subdev *sd,
 	case V4L2_SEL_TGT_CROP:
 		mutex_lock(&sensor->lock);
 
-		_crop = ar0144_get_pad_crop(sensor, cfg, sel->pad, sel->which);
+		_crop = ar0144_get_pad_crop(sensor, sd_state, sel->pad, sel->which);
 		sel->r = *_crop;
 
 		mutex_unlock(&sensor->lock);
@@ -1775,13 +1775,13 @@ static int ar0144_get_selection(struct v4l2_subdev *sd,
 }
 
 static int ar0144_get_mbus_config(struct v4l2_subdev *sd, unsigned int pad,
-				  struct v4l2_mbus_config *cfg)
+				  struct v4l2_mbus_config *sd_state)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
 	struct ar0144_businfo *info = &sensor->info;
 
-	cfg->flags = info->flags;
-	cfg->type = info->bus_type;
+	sd_state->flags = info->flags;
+	sd_state->type = info->bus_type;
 
 	return 0;
 }
