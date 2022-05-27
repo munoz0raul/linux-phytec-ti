@@ -1267,7 +1267,19 @@ int dispc_vp_set_clk_rate(struct dispc_device *dispc, u32 hw_videoport,
 	int r;
 	unsigned long new_rate;
 
-	r = clk_set_rate(dispc->vp_clk[hw_videoport], rate);
+	/*
+	 * !!!!!HACK ALERT!!!!!
+	 * THIS WILL ONLY WORK ON AM62 and for few formats of OLDI!!
+	 * THIS CODE IS TO DIFFERNTIATE BETWEEN DPI VS OLDI
+	 * THE RIGHT SOLUTION INVOLVES using the *7 depending on formats for
+	 * OLDI alone. This code breaks single link displays for AM62 OLDI
+	 * along with every other platform
+	 */
+	if (hw_videoport == 1 )
+		r = clk_set_rate(dispc->vp_clk[hw_videoport], rate);
+	else
+		r = clk_set_rate(dispc->vp_clk[hw_videoport], rate * 7);
+
 	if (r) {
 		dev_err(dispc->dev, "vp%d: failed to set clk rate to %lu\n",
 			hw_videoport, rate);
