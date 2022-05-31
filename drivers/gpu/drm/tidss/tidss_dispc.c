@@ -972,15 +972,20 @@ static void dispc_enable_oldi(struct dispc_device *dispc, u32 hw_videoport,
 		dev_warn(dispc->dev, "%s: %d port width not supported\n",
 			 __func__, fmt->data_width);
 
+	/* HACK ALERT: We should do this based on properties, not by default */
+	oldi_cfg |= BIT(11); /* DUALMODESYNC */
+
 	oldi_cfg |= BIT(7); /* DEPOL */
 
-	oldi_cfg = FLD_MOD(oldi_cfg, fmt->oldi_mode_reg_val, 3, 1);
+	/* HACK ALERT: We should do this based on properties, not by default */
+	oldi_cfg = FLD_MOD(oldi_cfg, 0x6, 3, 1); /* 6h -> DUAL LINK 24 bit */
 
 	oldi_cfg |= BIT(12); /* SOFTRST */
 
 	oldi_cfg |= BIT(0); /* ENABLE */
 
 	dispc_vp_write(dispc, hw_videoport, DISPC_VP_DSS_OLDI_CFG, oldi_cfg);
+	dispc_vp_write(dispc, hw_videoport + 1, DISPC_VP_DSS_OLDI_CFG, oldi_cfg);
 
 	while (!(oldi_reset_bit & dispc_read(dispc, DSS_SYSSTATUS)) &&
 	       count < 10000)
