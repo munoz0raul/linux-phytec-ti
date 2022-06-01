@@ -2726,10 +2726,10 @@ static const struct panel_desc logictechno_lt170410_2whc = {
 
 static const struct drm_display_mode lincolntech_lcd185_101ct_mode = {
 	.clock = 77560,
-	.hdisplay = 960,
-	.hsync_start = 960 + 6,
-	.hsync_end = 960 + 6 + 10,
-	.htotal = 960 + 6 + 10 + 64,
+	.hdisplay = 1920,
+	.hsync_start = 1920 + 12,
+	.hsync_end = 1920 + 12 + 20,
+	.htotal = 1920 + 12 + 20 + 128,
 	.vdisplay = 1200,
 	.vsync_start = 1200 + 20,
 	.vsync_end = 1200 + 20 + 4,
