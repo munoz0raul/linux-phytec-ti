@@ -1274,11 +1274,18 @@ int dispc_vp_set_clk_rate(struct dispc_device *dispc, u32 hw_videoport,
 	 * THE RIGHT SOLUTION INVOLVES using the *7 depending on formats for
 	 * OLDI alone. This code breaks single link displays for AM62 OLDI
 	 * along with every other platform
+	 *
+	 * Additionally, there is another clock divider in use if the OLDI
+	 * is  configured in the dual link mode.
+	 * Below are the multiplying constants summarised.
+	 *
+	 * To enable a single link configuration: Factor *7
+	 * To enable a dual link configuration: Factor *7 *2
 	 */
 	if (hw_videoport == 1 )
 		r = clk_set_rate(dispc->vp_clk[hw_videoport], rate);
 	else
-		r = clk_set_rate(dispc->vp_clk[hw_videoport], rate * 7);
+		r = clk_set_rate(dispc->vp_clk[hw_videoport], rate * 7 * 2);
 
 	if (r) {
 		dev_err(dispc->dev, "vp%d: failed to set clk rate to %lu\n",
