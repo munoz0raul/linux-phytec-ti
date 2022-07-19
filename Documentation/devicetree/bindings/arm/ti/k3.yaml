@@ -41,6 +41,12 @@ properties:
               - ti,am625-sk
           - const: ti,am625
 
+      - description: K3 AM625 SoC PHYTEC phyBOARD-Lyra
+        items:
+          - const: phytec,am625-phyboard-lyra-rdk
+          - const: phytec,am62-phycore-som
+          - const: ti,am625
+
       - description: K3 AM642 SoC
         items:
           - enum:
