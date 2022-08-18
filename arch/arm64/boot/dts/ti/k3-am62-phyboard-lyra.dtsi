@@ -408,12 +408,13 @@
 	typec_pd: usb-pd@22 {
 		compatible = "ti,tps6598x";
 		reg = <0x22>;
+/*
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb_typec_int_pins_default>;
 		interrupt-parent = <&main_gpio0>;
 		interrupts = <33 IRQ_TYPE_LEVEL_LOW>;
 		interrupt-names = "irq";
-
+*/
 		connector {
 			ports {
 				#address-cells = <1>;
