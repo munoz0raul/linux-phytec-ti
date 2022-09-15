@@ -61,6 +61,7 @@
 			"Speaker", "External Speaker";
 		simple-audio-card,routing =
 			"MIC3R",		"Mic Jack",
+			"Mic Jack",		"Mic Bias",
 			"Headphone Jack",	"HPLOUT",
 			"Headphone Jack",	"HPROUT",
 			"External Speaker",	"SPOP",
@@ -340,6 +341,7 @@
 		#sound-dai-cells = <0>;
 		compatible = "ti,tlv320aic3007";
 		reg = <0x18>;
+		ai3x-micbias-vg = <2>;
 
 		assigned-clocks = <&k3_clks 157 10>;
 		assigned-clock-parents = <&k3_clks 157 17>;
