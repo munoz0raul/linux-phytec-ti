@@ -310,6 +310,16 @@
 	non-removable;
 };
 
+&mcu_rti0 {
+       /* MCU RTI0 is used by M4F firmware */
+       status = "reserved";
+};
+
+&wkup_rti0 {
+       /* WKUP RTI0 is used by DM firmware */
+       status = "reserved";
+};
+
 /* wkup_uart0 is reserved for firmware usage */
 &wkup_uart0 {
 	pinctrl-names = "default";
