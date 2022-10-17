@@ -342,7 +342,7 @@ static int k3_dsp_rproc_start(struct rproc *rproc)
 		goto put_mbox;
 	}
 
-	dev_err(dev, "booting DSP core using boot addr = 0x%x\n", boot_addr);
+	dev_info(dev, "booting DSP core using boot addr = 0x%x\n", boot_addr);
 	ret = ti_sci_proc_set_config(kproc->tsp, boot_addr, 0, 0);
 	if (ret)
 		goto put_mbox;
@@ -404,7 +404,7 @@ static int k3_dsp_rproc_attach(struct rproc *rproc)
 	if (ret)
 		return ret;
 
-	dev_err(dev, "DSP initialized in IPC-only mode\n");
+	dev_info(dev, "DSP initialized in IPC-only mode\n");
 	return 0;
 }
 
@@ -426,7 +426,7 @@ static int k3_dsp_rproc_detach(struct rproc *rproc)
 	}
 
 	mbox_free_channel(kproc->mbox);
-	dev_err(dev, "DSP deinitialized in IPC-only mode\n");
+	dev_info(dev, "DSP deinitialized in IPC-only mode\n");
 	return 0;
 }
 
@@ -800,12 +800,12 @@ static int k3_dsp_rproc_probe(struct platform_device *pdev)
 
 	/* configure J721E devices for either remoteproc or IPC-only mode */
 	if (p_state) {
-		dev_err(dev, "configured DSP for IPC-only mode\n");
+		dev_info(dev, "configured DSP for IPC-only mode\n");
 		rproc->state = RPROC_DETACHED;
 		rproc->detach_on_shutdown = true;
 		kproc->ipc_only = true;
 	} else {
-		dev_err(dev, "configured DSP for remoteproc mode\n");
+		dev_info(dev, "configured DSP for remoteproc mode\n");
 		/*
 		 * ensure the DSP local reset is asserted to ensure the DSP
 		 * doesn't execute bogus code in .prepare() when the module
