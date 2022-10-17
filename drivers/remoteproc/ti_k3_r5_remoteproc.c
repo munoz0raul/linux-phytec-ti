@@ -684,7 +684,7 @@ static int k3_r5_rproc_attach(struct rproc *rproc)
 	if (ret)
 		return ret;
 
-	dev_err(dev, "R5F core initialized in IPC-only mode\n");
+	dev_info(dev, "R5F core initialized in IPC-only mode\n");
 	return 0;
 }
 
@@ -706,7 +706,7 @@ static int k3_r5_rproc_detach(struct rproc *rproc)
 	}
 
 	mbox_free_channel(kproc->mbox);
-	dev_err(dev, "R5F core deinitialized in IPC-only mode\n");
+	dev_info(dev, "R5F core deinitialized in IPC-only mode\n");
 	return 0;
 }
 
@@ -1200,13 +1200,13 @@ static int k3_r5_rproc_configure_mode(struct k3_r5_rproc *kproc)
 	 * deasserted), and is deemed as remoteproc mode
 	 */
 	if (c_state && !ret && !halted) {
-		dev_err(cdev, "configured R5F for IPC-only mode\n");
+		dev_info(cdev, "configured R5F for IPC-only mode\n");
 		kproc->rproc->state = RPROC_DETACHED;
 		kproc->rproc->detach_on_shutdown = true;
 		kproc->ipc_only = true;
 		ret = 1;
 	} else if (!c_state) {
-		dev_err(cdev, "configured R5F for remoteproc mode\n");
+		dev_info(cdev, "configured R5F for remoteproc mode\n");
 		ret = 0;
 	} else {
 		dev_err(cdev, "mismatched mode: local_reset = %s, module_reset = %s, core_state = %s\n",
