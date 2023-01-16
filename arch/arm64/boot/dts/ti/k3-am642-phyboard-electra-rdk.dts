@@ -402,6 +402,10 @@
 	};
 };
 
+&tscadc0 {
+	status = "disabled";
+};
+
 &main_mcan0 {
 	status = "okay";
 	pinctrl-names = "default";
