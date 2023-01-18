@@ -189,7 +189,7 @@
 		pinctrl-0 = <&rtc_pins_default>;
 		reg = <0x52>;
 		interrupt-parent = <&main_gpio1>;
-		interrupts = <70 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <70 IRQ_TYPE_EDGE_FALLING>;
 		wakeup-source;
 	};
 
