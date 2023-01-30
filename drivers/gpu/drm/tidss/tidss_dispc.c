@@ -1332,10 +1332,17 @@ int dispc_vp_set_clk_rate(struct dispc_device *dispc, u32 hw_videoport,
 	 * serial clock required for the serialization of DPI signals into LVDS signals. The
 	 * incoming pixel clock on the OLDI video port gets divided by 7 whenever OLDI enable bit
 	 * gets set.
+	 *
+	 * Additionally, there is another clock divider in use if the OLDI
+	 * is  configured in the dual link mode.
+	 * Below are the multiplying constants summarised.
+	 *
+	 * To enable a single link configuration: Factor *7
+	 * To enable a dual link configuration: Factor *7 *2
 	 */
 	if (dispc->feat->vp_bus_type[hw_videoport] == DISPC_VP_OLDI &&
 	    dispc->feat->subrev == DISPC_AM625)
-		rate *= 7;
+		rate *= 7 * 2;
 
 	r = clk_set_rate(dispc->vp_clk[hw_videoport], rate);
 	if (r) {
