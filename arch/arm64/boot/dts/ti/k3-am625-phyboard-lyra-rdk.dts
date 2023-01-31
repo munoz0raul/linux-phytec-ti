@@ -57,7 +57,7 @@
 		};
 	};
 
-	connector {
+	hdmi_connector: connector {
 		compatible = "hdmi-connector";
 		label = "hdmi";
 		type = "a";
@@ -390,7 +390,7 @@
 		reg = <0x51>;
 	};
 
-	hdmi@39 {
+	hdmi: hdmi@39 {
 		compatible = "sil,sii9022";
 		reg = <0x39>;
 		reset-gpios = <&gpio_exp 0 GPIO_ACTIVE_LOW>;
