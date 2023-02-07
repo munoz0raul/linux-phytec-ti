@@ -452,6 +452,10 @@
 	};
 };
 
+&i2c_som_rtc {
+	enable-level-switching-mode;
+};
+
 &main_i2c2 {
 	status = "disabled";
 };
