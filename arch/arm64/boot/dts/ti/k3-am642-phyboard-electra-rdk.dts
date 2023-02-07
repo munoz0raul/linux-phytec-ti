@@ -402,6 +402,10 @@
 	};
 };
 
+&i2c_som_rtc {
+	enable-level-switching-mode;
+};
+
 &tscadc0 {
 	status = "disabled";
 };
