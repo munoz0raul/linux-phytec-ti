@@ -87,6 +87,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-rpmsg.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62-phyboard-lyra-gpio-fan.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62-phycore-disable-spi-nor.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62-phycore-disable-rtc.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am62-phycore-disable-eth-phy.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am625-sk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62x-lp-sk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am625-skeleton.dtb
