@@ -22,6 +22,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am654-evm-ov5640.dtbo
 
 dtb-$(CONFIG_ARCH_K3) += k3-am68-phyboard-izar-rdk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am68-phyboard-izar-pwm-fan.dtbo
+dtb-$(CONFIG_ARCH_K3) += k3-am68-phyboard-izar-lvds-ac199.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am68-sk-base-board.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am68-sk-bb-csi2-ov5640.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am68-sk-bb-rpi-cam-imx219.dtbo
