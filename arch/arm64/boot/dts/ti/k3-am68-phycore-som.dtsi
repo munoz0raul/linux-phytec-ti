@@ -417,7 +417,7 @@
 		reg = <0x2d>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&wkup_sn65dsi83_pins_default>;
-		enable-gpios = <&wkup_gpio0 11 GPIO_ACTIVE_HIGH>;
+		/* enable-gpios = <&wkup_gpio0 11 GPIO_ACTIVE_HIGH>; */
 		status = "disabled";
 
 		sn65dsi83_ports: ports {
