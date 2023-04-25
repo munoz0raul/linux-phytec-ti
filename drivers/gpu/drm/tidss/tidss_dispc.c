@@ -1117,6 +1117,14 @@ void dispc_vp_enable(struct dispc_device *dispc, u32 hw_videoport,
 
 	ihs = !!(mode->flags & DRM_MODE_FLAG_NHSYNC);
 
+	/*
+	 * HACK: On j721e, VP3 is hardcoded to connect to internal DPI to DSI
+	 * bridge which only supports negative vsync & hsync flags.
+	 */
+	if (dispc->feat->vp_bus_type[hw_videoport] == DISPC_VP_INTERNAL &&
+	    dispc->feat->subrev == DISPC_J721E && hw_videoport == 2)
+		ivs = ihs = true;
+
 	ieo = !!(tstate->bus_flags & DRM_BUS_FLAG_DE_LOW);
 
 	ipc = !!(tstate->bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE);
