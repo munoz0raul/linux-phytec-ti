@@ -128,25 +128,10 @@
 #define		BIT_DUAL_LANE				BIT(1)
 #define		BIT_SINGLE_LANE				BIT(0)
 #define AR0144_MIPI_TIMING_0				0x31b4
-#define		BIT_HS_PREP(n)				((n) << 12)
-#define		BIT_HS_ZERO(n)				((n) << 8)
-#define		BIT_HS_TRAIL(n)				((n) << 4)
-#define		BIT_CLK_TRAIL(n)			(n)
 #define AR0144_MIPI_TIMING_1				0x31b6
-#define		BIT_CLK_PREP(n)				((n) << 12)
-#define		BIT_HS_EXIT(n)				((n) << 6)
-#define		BIT_CLK_ZERO(n)				(n)
 #define AR0144_MIPI_TIMING_2				0x31b8
-#define		BIT_BGAP(n)				((n) << 12)
-#define		BIT_CLK_PRE(n)				((n) << 6)
-#define		BIT_CLK_POST(n)				(n)
 #define AR0144_MIPI_TIMING_3				0x31ba
-#define		BIT_LPX(n)				((n) << 7)
-#define		BIT_WAKE_UP(n)				(n)
 #define AR0144_MIPI_TIMING_4				0x31bc
-#define		BIT_CONT_TX_CLK				BIT(15)
-#define		BIT_HEAVY_LP_LOAD			BIT(14)
-#define		BIT_INIT(n)				(n)
 #define AR0144_SER_CTRL_STAT				0x31c6
 #define		BIT_FRAMER_TEST_MODE			BIT(7)
 #define	AR0144_COMPANDING				0x31d0
@@ -174,9 +159,6 @@
 #define	AR0144_TEST_LANE_1		(0x2 << 8)
 #define	AR0144_TEST_MODE_LP11		(0x1 << 4)
 
-#define AR0144_MAX_MIPI_LINK		384000000ULL
-#define AR0144_MAX_PARALLEL_LINK	74250000ULL
-
 #define	AR0144_CSI2_DATA_RAW8		0x2a
 #define	AR0144_CSI2_DATA_RAW10		0x2b
 #define	AR0144_CSI2_DATA_RAW12		0x2c
@@ -184,8 +166,6 @@
 #define AR0144_NO_SLEW_RATE		(~0u)
 
 #define AR0144_CHIP_VERSION		0x0356
-#define AR0144_DEF_WIDTH		1280
-#define AR0144_DEF_HEIGHT		800
 
 
 enum {
@@ -224,15 +204,148 @@ enum {
 	V4L2_X_EMBEDDED_BOTH,
 };
 
-enum ar0144_model {
+enum ar0144_chip {
+	AR0144,
+	AR0234,
+};
+
+enum ar0144_color {
 	AR0144_MODEL_UNKNOWN,
 	AR0144_MODEL_COLOR,
 	AR0144_MODEL_MONOCHROME,
 };
 
+struct limit_range {
+	unsigned long min;
+	unsigned long max;
+};
+
+struct ar0144_sensor_limits {
+	struct limit_range x;
+	struct limit_range y;
+	struct limit_range hlen;
+	struct limit_range vlen;
+	struct limit_range hblank;
+	struct limit_range vblank;
+	struct limit_range ext_clk;
+};
+
+struct ar0144_mipi_timing {
+	const char name[32];
+	u16 value;
+	u16 max;
+	u16 shift;
+};
+
+struct ar0144_model_data {
+	unsigned int max_lanes;
+	unsigned long max_parallel_link_freq;
+	unsigned long max_mipi_link_freq;
+	unsigned int max_again;
+	unsigned int def_width;
+	unsigned int def_height;
+	unsigned int def_offset_x;
+	unsigned int def_offset_y;
+
+	struct ar0144_mipi_timing *timing0;
+	unsigned int size_timing0;
+	struct ar0144_mipi_timing *timing1;
+	unsigned int size_timing1;
+	struct ar0144_mipi_timing *timing2;
+	unsigned int size_timing2;
+	struct ar0144_mipi_timing *timing3;
+	unsigned int size_timing3;
+	struct ar0144_mipi_timing *timing4;
+	unsigned int size_timing4;
+
+	const struct ar0144_sensor_limits *limits;
+};
+
+struct ar0144_model {
+	enum ar0144_chip chip;
+	enum ar0144_color color;
+	unsigned int chip_version;
+	struct ar0144_model_data *data;
+};
+
 struct ar0144_format {
 	unsigned int code;
 	unsigned int bpp;
+};
+
+struct ar0144_businfo {
+	enum v4l2_mbus_type bus_type;
+	unsigned int flags;
+	unsigned long target_link_frequency;
+	const s64 *link_freqs;
+
+	unsigned int slew_rate_dat;
+	unsigned int slew_rate_clk;
+
+	unsigned int num_lanes;
+};
+
+struct ar0144_pll_config {
+	unsigned int pre_pll_div;
+	unsigned int pre_pll_mul;
+	unsigned int vt_sys_div;
+	unsigned int vt_pix_div;
+	unsigned int op_sys_div;
+	unsigned int op_pix_div;
+	unsigned long vco_freq;
+	unsigned long pix_freq;
+	unsigned long ser_freq;
+};
+
+struct ar0144_gains {
+	struct v4l2_ctrl *dig_ctrl;
+	struct v4l2_ctrl *red_ctrl;
+	struct v4l2_ctrl *greenb_ctrl;
+	struct v4l2_ctrl *greenr_ctrl;
+	struct v4l2_ctrl *blue_ctrl;
+	unsigned int red;
+	unsigned int greenb;
+	unsigned int greenr;
+	unsigned int blue;
+	unsigned int min_ref;
+	unsigned int max_again;
+};
+
+struct ar0144 {
+	struct v4l2_subdev subdev;
+	struct device *dev;
+	struct v4l2_ctrl_handler ctrls;
+	struct media_pad pad;
+
+	struct v4l2_mbus_framefmt fmt;
+	struct v4l2_rect crop;
+	unsigned int bpp;
+	unsigned int w_scale;
+	unsigned int h_scale;
+	unsigned int vblank;
+	unsigned int hblank;
+	unsigned int hlen;
+	unsigned int vlen;
+	bool embedded_data;
+	bool embedded_stat;
+
+	struct ar0144_model *model;
+	struct ar0144_businfo info;
+	struct ar0144_pll_config *pll;
+
+	const struct ar0144_format *formats;
+	unsigned int num_fmts;
+
+	struct ar0144_gains gains;
+
+	struct clk *extclk;
+	struct gpio_desc *reset_gpio;
+
+	struct mutex lock;
+
+	int power_user;
+	bool is_streaming;
+	bool trigger;
 };
 
 static const struct ar0144_format ar0144_mono_formats[] = {
@@ -259,111 +372,6 @@ static const struct ar0144_format ar0144_col_formats[] = {
 		.code	= MEDIA_BUS_FMT_SGRBG12_1X12,
 		.bpp	= 12,
 	},
-};
-
-struct limit_range {
-	unsigned long min;
-	unsigned long max;
-};
-
-struct ar0144_sensor_limits {
-	struct limit_range x;
-	struct limit_range y;
-	struct limit_range hlen;
-	struct limit_range vlen;
-	struct limit_range hblank;
-	struct limit_range vblank;
-	struct limit_range ext_clk;
-};
-
-struct ar0144_businfo {
-	enum v4l2_mbus_type bus_type;
-	unsigned int flags;
-	unsigned long target_link_frequency;
-	const s64 *link_freqs;
-
-	unsigned int slew_rate_dat;
-	unsigned int slew_rate_clk;
-
-	unsigned int num_lanes;
-	u16 t_hs_prep;
-	u16 t_hs_zero;
-	u16 t_hs_trail;
-	u16 t_clk_trail;
-	u16 t_clk_prep;
-	u16 t_hs_exit;
-	u16 t_clk_zero;
-	u16 t_bgap;
-	u16 t_clk_pre;
-	u16 t_clk_post;
-	u16 t_lpx;
-	u16 t_wakeup;
-	u16 t_init;
-	bool cont_tx_clk;
-	bool heavy_lp_load;
-};
-
-struct ar0144_pll_config {
-	unsigned int pre_pll_div;
-	unsigned int pre_pll_mul;
-	unsigned int vt_sys_div;
-	unsigned int vt_pix_div;
-	unsigned int op_sys_div;
-	unsigned int op_pix_div;
-	unsigned long vco_freq;
-	unsigned long pix_freq;
-	unsigned long ser_freq;
-};
-
-struct ar0144_gains {
-	struct v4l2_ctrl *dig_ctrl;
-	struct v4l2_ctrl *red_ctrl;
-	struct v4l2_ctrl *greenb_ctrl;
-	struct v4l2_ctrl *greenr_ctrl;
-	struct v4l2_ctrl *blue_ctrl;
-	unsigned int red;
-	unsigned int greenb;
-	unsigned int greenr;
-	unsigned int blue;
-	unsigned int min_ref;
-};
-
-struct ar0144 {
-	struct v4l2_subdev subdev;
-	struct device *dev;
-	struct v4l2_ctrl_handler ctrls;
-	struct media_pad pad;
-
-	struct v4l2_mbus_framefmt fmt;
-	struct v4l2_rect crop;
-	unsigned int bpp;
-	unsigned int w_scale;
-	unsigned int h_scale;
-	unsigned int vblank;
-	unsigned int hblank;
-	unsigned int hlen;
-	unsigned int vlen;
-	bool embedded_data;
-	bool embedded_stat;
-
-	struct ar0144_businfo info;
-	struct ar0144_pll_config *pll;
-	struct ar0144_sensor_limits limits;
-	enum ar0144_model model;
-
-	const struct ar0144_format *formats;
-	unsigned int num_fmts;
-
-	struct ar0144_gains gains;
-
-	struct clk *extclk;
-	struct gpio_desc *reset_gpio;
-
-	struct mutex lock;
-
-	int power_user;
-	bool is_streaming;
-	bool trigger;
 };
 
 static inline struct ar0144 *to_ar0144(struct v4l2_subdev *sd)
@@ -892,7 +900,7 @@ static int ar0144_stream_on(struct ar0144 *sensor)
 	if (ret)
 		return ret;
 
-	mono_op = sensor->model == AR0144_MODEL_MONOCHROME;
+	mono_op = sensor->model->color == AR0144_MODEL_MONOCHROME;
 
 	ret = ar0144_update_bits(sensor, AR0144_DIGITAL_TEST, BIT_MONOCHROME_OP,
 				 mono_op ? BIT_MONOCHROME_OP : 0);
@@ -1071,13 +1079,15 @@ out:
 static unsigned int ar0144_get_hlength(struct ar0144 *sensor)
 {
 	return clamp_t(unsigned int, sensor->fmt.width + sensor->hblank,
-		       sensor->limits.hlen.min, sensor->limits.hlen.max);
+		       sensor->model->data->limits->hlen.min,
+		       sensor->model->data->limits->hlen.max);
 }
 
 static unsigned int ar0144_get_vlength(struct ar0144 *sensor)
 {
 	return clamp_t(unsigned int, sensor->fmt.height + sensor->vblank,
-		       sensor->limits.vlen.min, sensor->limits.vlen.max);
+		       sensor->model->data->limits->vlen.min,
+		       sensor->model->data->limits->vlen.max);
 }
 
 static int ar0144_set_fmt(struct v4l2_subdev *sd,
@@ -1103,7 +1113,7 @@ static int ar0144_set_fmt(struct v4l2_subdev *sd,
 	crop = ar0144_get_pad_crop(sensor, sd_state, format->pad,
 				   V4L2_SUBDEV_FORMAT_ACTIVE);
 
-	if (sensor->model == AR0144_MODEL_COLOR)
+	if (sensor->model->color == AR0144_MODEL_COLOR)
 		fmt->colorspace = V4L2_COLORSPACE_RAW;
 	else
 		fmt->colorspace = V4L2_COLORSPACE_SRGB;
@@ -1177,6 +1187,7 @@ static int ar0144_set_selection(struct v4l2_subdev *sd,
 				struct v4l2_subdev_selection *sel)
 {
 	struct ar0144 *sensor = to_ar0144(sd);
+	const struct ar0144_sensor_limits *limits = sensor->model->data->limits;
 	struct v4l2_rect *_crop;
 	unsigned int max_w, max_h;
 	int ret = 0;
@@ -1196,8 +1207,8 @@ static int ar0144_set_selection(struct v4l2_subdev *sd,
 	_crop = ar0144_get_pad_crop(sensor, sd_state, sel->pad, sel->which);
 
 	/* Check againts max, min values */
-	max_w = sensor->limits.x.max - sensor->limits.x.min - 1;
-	max_h = sensor->limits.y.max - sensor->limits.y.min - 1;
+	max_w = limits->x.max - limits->x.min + 1;
+	max_h = limits->y.max - limits->y.min + 1;
 
 	_crop->top = min_t(unsigned int, ALIGN(sel->r.top, 2), max_h);
 	_crop->left = min_t(unsigned int, ALIGN(sel->r.left, 2), max_w);
@@ -1231,10 +1242,10 @@ static int ar0144_get_selection(struct v4l2_subdev *sd,
 {
 	struct ar0144 *sensor = to_ar0144(sd);
 	struct v4l2_rect *_crop;
-	unsigned int x_min = sensor->limits.x.min;
-	unsigned int y_min = sensor->limits.y.min;
-	unsigned int x_max = sensor->limits.x.max;
-	unsigned int y_max = sensor->limits.y.max;
+	unsigned int x_min = sensor->model->data->limits->x.min;
+	unsigned int y_min = sensor->model->data->limits->y.min;
+	unsigned int x_max = sensor->model->data->limits->x.max;
+	unsigned int y_max = sensor->model->data->limits->y.max;
 
 	switch (sel->target) {
 	case V4L2_SEL_TGT_CROP:
@@ -1248,8 +1259,8 @@ static int ar0144_get_selection(struct v4l2_subdev *sd,
 	case V4L2_SEL_TGT_CROP_DEFAULT:
 		sel->r.left = 4;
 		sel->r.top = 4;
-		sel->r.width = AR0144_DEF_WIDTH;
-		sel->r.height = AR0144_DEF_HEIGHT;
+		sel->r.width = sensor->model->data->def_width;
+		sel->r.height = sensor->model->data->def_height;
 		break;
 	case V4L2_SEL_TGT_CROP_BOUNDS:
 		sel->r.left = x_min;
@@ -1361,7 +1372,7 @@ static int ar0144_set_digital_gain(struct ar0144 *sensor,
 
 	switch (ctrl->id) {
 	case V4L2_CID_DIGITAL_GAIN:
-		if (sensor->model == AR0144_MODEL_MONOCHROME) {
+		if (sensor->model->color == AR0144_MODEL_MONOCHROME) {
 			ret = ar0144_write(sensor, AR0144_GLOBAL_GAIN,
 					   (coarse << 7) | fine);
 			return ret;
@@ -1777,7 +1788,6 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 		.min		= 0,
 		.max		= 65535,
 		.step		= 1,
-		.def		= 800,
 	}, {
 		/* TODO: remove me and replace by EXPOSURE -> 100us
 		 * conversion
@@ -1844,7 +1854,6 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 		.min		= 0,
 		.max		= 65535,
 		.step		= 1,
-		.def		= 800,
 	}, {
 		.ops		= &ar0144_ctrl_ops,
 		.id		= V4L2_CID_X_AUTO_EXPOSURE_CUR,
@@ -1931,7 +1940,6 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 		.type		= V4L2_CTRL_TYPE_INTEGER,
 		.min		= 1684,
 		.step		= 1,
-		.max		= 16000,
 		.def		= 2000,
 	}, {
 		.ops		= &ar0144_ctrl_ops,
@@ -2047,6 +2055,7 @@ static const struct v4l2_ctrl_config ar0144_ctrls[] = {
 
 static int ar0144_create_ctrls(struct ar0144 *sensor)
 {
+	struct ar0144_model_data *data = sensor->model->data;
 	struct v4l2_ctrl_config ctrl_cfg;
 	struct v4l2_ctrl *ctrl;
 	int i;
@@ -2067,7 +2076,7 @@ static int ar0144_create_ctrls(struct ar0144 *sensor)
 		case V4L2_CID_X_DIGITAL_GAIN_GREENR:
 		case V4L2_CID_X_DIGITAL_GAIN_BLUE:
 		case V4L2_CID_X_DIGITAL_GAIN_GREENB:
-			if (sensor->model == AR0144_MODEL_MONOCHROME)
+			if (sensor->model->color == AR0144_MODEL_MONOCHROME)
 				continue;
 
 			break;
@@ -2076,12 +2085,22 @@ static int ar0144_create_ctrls(struct ar0144 *sensor)
 				continue;
 
 			break;
+		case V4L2_CID_ANALOGUE_GAIN:
+			ctrl_cfg.max = data->max_again;
+			sensor->gains.max_again = ctrl_cfg.max;
+			break;
+		case V4L2_CID_EXPOSURE:
+			ctrl_cfg.def = data->def_height;
+			break;
+		case V4L2_CID_X_AUTO_EXPOSURE_MAX:
+			ctrl_cfg.def = data->def_height;
+			break;
 		case V4L2_CID_HBLANK:
-			ctrl_cfg.min = sensor->limits.hblank.min;
+			ctrl_cfg.min = data->limits->hblank.min;
 			ctrl_cfg.def = ctrl_cfg.min;
 			break;
 		case V4L2_CID_VBLANK:
-			ctrl_cfg.min = sensor->limits.vblank.min;
+			ctrl_cfg.min = data->limits->vblank.min;
 			ctrl_cfg.def = ctrl_cfg.min;
 			break;
 		case V4L2_CID_LINK_FREQ:
@@ -2122,19 +2141,19 @@ static int ar0144_create_ctrls(struct ar0144 *sensor)
 			sensor->gains.dig_ctrl = ctrl;
 			break;
 		case V4L2_CID_X_DIGITAL_GAIN_RED:
-			if (sensor->model == AR0144_MODEL_COLOR)
+			if (sensor->model->color == AR0144_MODEL_COLOR)
 				sensor->gains.red_ctrl = ctrl;
 			break;
 		case V4L2_CID_X_DIGITAL_GAIN_GREENB:
-			if (sensor->model == AR0144_MODEL_COLOR)
+			if (sensor->model->color == AR0144_MODEL_COLOR)
 				sensor->gains.greenb_ctrl = ctrl;
 			break;
 		case V4L2_CID_X_DIGITAL_GAIN_GREENR:
-			if (sensor->model == AR0144_MODEL_COLOR)
+			if (sensor->model->color == AR0144_MODEL_COLOR)
 				sensor->gains.greenr_ctrl = ctrl;
 			break;
 		case V4L2_CID_X_DIGITAL_GAIN_BLUE:
-			if (sensor->model == AR0144_MODEL_COLOR)
+			if (sensor->model->color == AR0144_MODEL_COLOR)
 				sensor->gains.blue_ctrl = ctrl;
 			break;
 		default:
@@ -2147,50 +2166,82 @@ static int ar0144_create_ctrls(struct ar0144 *sensor)
 
 static int ar0144_init_mipi_sensor(struct ar0144 *sensor)
 {
-	int ret;
+	struct ar0144_model_data *data = sensor->model->data;
+	int ret, i;
 	u16 val = 0;
 
-	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_0,
-			   BIT_HS_PREP(sensor->info.t_hs_prep) |
-			   BIT_HS_ZERO(sensor->info.t_hs_zero) |
-			   BIT_HS_TRAIL(sensor->info.t_hs_trail) |
-			   BIT_CLK_TRAIL(sensor->info.t_clk_trail));
+	for (i = 0; i < data->size_timing0; i++) {
+		val |= (data->timing0[i].value << data->timing0[i].shift);
+		dev_dbg(sensor->dev, "%s: %u << %u\n", data->timing0[i].name,
+			data->timing0[i].value, data->timing0[i].shift);
+	}
+
+	dev_dbg(sensor->dev, "MIPI TIMING0: 0x%04x\n", val);
+
+	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_0, val);
 	if (ret)
 		return ret;
 
-	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_1,
-			   BIT_CLK_PREP(sensor->info.t_clk_prep) |
-			   BIT_HS_EXIT(sensor->info.t_hs_exit) |
-			   BIT_CLK_ZERO(sensor->info.t_clk_zero));
+	val = 0;
+	for (i = 0; i < data->size_timing1; i++) {
+		val |= (data->timing1[i].value << data->timing1[i].shift);
+		dev_dbg(sensor->dev, "%s: %u << %u\n", data->timing1[i].name,
+			data->timing1[i].value, data->timing1[i].shift);
+	}
+
+	dev_dbg(sensor->dev, "MIPI TIMING1: 0x%04x\n", val);
+
+	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_1, val);
 	if (ret)
 		return ret;
 
-	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_2,
-			   BIT_BGAP(sensor->info.t_bgap) |
-			   BIT_CLK_PRE(sensor->info.t_clk_pre) |
-			   BIT_CLK_POST(sensor->info.t_clk_post));
+	val = 0;
+	for (i = 0; i < data->size_timing2; i++) {
+		val |= (data->timing2[i].value << data->timing2[i].shift);
+		dev_dbg(sensor->dev, "%s: %u << %u\n", data->timing2[i].name,
+			data->timing2[i].value, data->timing2[i].shift);
+	}
+
+	dev_dbg(sensor->dev, "MIPI TIMING2: 0x%04x\n", val);
+
+	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_2, val);
 	if (ret)
 		return ret;
 
-	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_3,
-			   BIT_LPX(sensor->info.t_lpx) |
-			   BIT_WAKE_UP(sensor->info.t_wakeup));
+	val = 0;
+	for (i = 0; i < data->size_timing3; i++) {
+		val |= (data->timing3[i].value << data->timing3[i].shift);
+		dev_dbg(sensor->dev, "%s: %u << %u\n", data->timing3[i].name,
+			data->timing3[i].value, data->timing3[i].shift);
+	}
+
+	dev_dbg(sensor->dev, "MIPI TIMING3: 0x%04x\n", val);
+
+	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_3, val);
 	if (ret)
 		return ret;
 
-	val = BIT_INIT(sensor->info.t_init) |
-	      (sensor->info.cont_tx_clk ? (u16) BIT_CONT_TX_CLK : 0) |
-	      (sensor->info.heavy_lp_load ?
-	      (u16) BIT_HEAVY_LP_LOAD : 0);
+	val = 0;
+	for (i = 0; i < data->size_timing4; i++) {
+		val |= (data->timing4[i].value << data->timing4[i].shift);
+		dev_dbg(sensor->dev, "%s: %u << %u\n", data->timing4[i].name,
+			data->timing4[i].value, data->timing4[i].shift);
+	}
+
+	dev_dbg(sensor->dev, "MIPI TIMING4: 0x%04x\n", val);
 
 	ret = ar0144_write(sensor, AR0144_MIPI_TIMING_4, val);
 	if (ret)
 		return ret;
 
-	if (sensor->info.num_lanes == 1)
+	switch (sensor->info.num_lanes) {
+	case 1:
 		val = BIT_SINGLE_LANE;
-	else
+		break;
+	case 2:
 		val = BIT_DUAL_LANE;
+		break;
+	}
 
 	ret = ar0144_update_bits(sensor, AR0144_SERIAL_FORMAT,
 				 BIT_DUAL_LANE | BIT_SINGLE_LANE, val);
@@ -2397,28 +2448,17 @@ static int ar0144_setup_pll(struct ar0144 *sensor)
 
 static void ar0144_set_defaults(struct ar0144 *sensor)
 {
-	sensor->limits = (struct ar0144_sensor_limits) {
-					/* min		max	  */
-		.x			= {0,		1295	  },
-		.y			= {0,		807	  },
-		.hlen			= {1488,	65534	  },
-		.vlen			= {29,		65535	  },
-		.hblank			= {208,		65535	  },
-		.vblank			= {22,		65535	  },
-		.ext_clk		= {6000000,	48000000  },
-	};
+	sensor->crop.left = sensor->model->data->def_offset_x;
+	sensor->crop.top = sensor->model->data->def_offset_y;
+	sensor->crop.width = sensor->model->data->def_width;
+	sensor->crop.height = sensor->model->data->def_height;
 
-	sensor->crop.left = 4;
-	sensor->crop.top = 4;
-	sensor->crop.width = AR0144_DEF_WIDTH;
-	sensor->crop.height = AR0144_DEF_HEIGHT;
-
-	sensor->fmt.width = AR0144_DEF_WIDTH;
-	sensor->fmt.height = AR0144_DEF_HEIGHT;
+	sensor->fmt.width = sensor->model->data->def_width;
+	sensor->fmt.height = sensor->model->data->def_height;
 	sensor->fmt.field = V4L2_FIELD_NONE;
 	sensor->fmt.colorspace = V4L2_COLORSPACE_SRGB;
 
-	if (sensor->model == AR0144_MODEL_MONOCHROME) {
+	if (sensor->model->color == AR0144_MODEL_MONOCHROME) {
 		sensor->formats = ar0144_mono_formats;
 		sensor->num_fmts = ARRAY_SIZE(ar0144_mono_formats);
 	} else {
@@ -2431,9 +2471,9 @@ static void ar0144_set_defaults(struct ar0144 *sensor)
 
 	sensor->w_scale = 1;
 	sensor->h_scale = 1;
-	sensor->hblank = sensor->limits.hblank.min;
-	sensor->vblank = sensor->limits.vblank.min;
-	sensor->hlen = sensor->limits.hlen.min;
+	sensor->hblank = sensor->model->data->limits->hblank.min;
+	sensor->vblank = sensor->model->data->limits->vblank.min;
+	sensor->hlen = sensor->model->data->limits->hlen.min;
 	sensor->vlen = sensor->fmt.height + sensor->vblank;
 	sensor->gains.red = 1000;
 	sensor->gains.greenr = 1000;
@@ -2494,9 +2534,9 @@ static int ar0144_check_chip_id(struct ar0144 *sensor)
 		goto out;
 	}
 
-	if (model_id != AR0144_CHIP_VERSION) {
+	if (model_id != sensor->model->chip_version) {
 		dev_err(dev, "Wrong chip version: 0x%04x <-> 0x%04x\n",
-			model_id, AR0144_CHIP_VERSION);
+			model_id, sensor->model->chip_version);
 		ret = -ENOENT;
 		goto out;
 	}
@@ -2508,11 +2548,11 @@ static int ar0144_check_chip_id(struct ar0144 *sensor)
 	dev_info(dev, "Device ID: 0x%04x, %s model\n",
 		 model_id, customer_rev & BIT_COLOR ? "color" : "monochrome");
 
-	if (sensor->model == AR0144_MODEL_UNKNOWN) {
+	if (sensor->model->color == AR0144_MODEL_UNKNOWN) {
 		if (customer_rev & BIT_COLOR)
-			sensor->model = AR0144_MODEL_COLOR;
+			sensor->model->color = AR0144_MODEL_COLOR;
 		else
-			sensor->model = AR0144_MODEL_MONOCHROME;
+			sensor->model->color = AR0144_MODEL_MONOCHROME;
 	}
 
 out:
@@ -2545,80 +2585,66 @@ static int ar0144_parse_mipi_props(struct ar0144 *sensor,
 				   struct fwnode_handle *ep,
 				   struct v4l2_fwnode_endpoint *bus_cfg)
 {
+	struct ar0144_model_data *data = sensor->model->data;
 	unsigned int tmp;
+	int i;
 
 	sensor->info.num_lanes = bus_cfg->bus.mipi_csi2.num_data_lanes;
-	if (sensor->info.num_lanes < 1 || sensor->info.num_lanes > 2) {
+	if (sensor->info.num_lanes < 1 ||
+	    sensor->info.num_lanes > data->max_lanes) {
 		dev_err(sensor->dev, "Wrong number of lanes configured");
 		return -EINVAL;
 	}
 
 	sensor->info.flags = bus_cfg->bus.mipi_csi2.flags;
 	sensor->info.flags |= V4L2_MBUS_CSI2_CHANNEL_0;
-	if (sensor->info.num_lanes == 1)
+
+	switch (sensor->info.num_lanes) {
+	case 1:
 		sensor->info.flags |= V4L2_MBUS_CSI2_1_LANE;
-	else
+		break;
+	case 2:
 		sensor->info.flags |= V4L2_MBUS_CSI2_2_LANE;
+		break;
+	default:
+		dev_err(sensor->dev, "Wrong number of lanes configured");
+		break;
+	}
 
-	tmp = 2;
-	fwnode_property_read_u32(ep, "onsemi,t-hs-prep", &tmp);
-	sensor->info.t_hs_prep = clamp_t(unsigned int, tmp, 0, 0xf);
+	for (i = 0; i < data->size_timing0; i++) {
+		tmp = data->timing0[i].value;
+		fwnode_property_read_u32(ep, data->timing0[i].name, &tmp);
+		data->timing0[i].value = clamp_t(unsigned int, tmp, 0,
+						 data->timing0[i].max);
+	}
 
-	tmp = 6;
-	fwnode_property_read_u32(ep, "onsemi,t-hs-zero", &tmp);
-	sensor->info.t_hs_zero = clamp_t(unsigned int, tmp, 0, 0xf);
+	for (i = 0; i < data->size_timing1; i++) {
+		tmp = data->timing1[i].value;
+		fwnode_property_read_u32(ep, data->timing1[i].name, &tmp);
+		data->timing1[i].value = clamp_t(unsigned int, tmp, 0,
+						 data->timing1[i].max);
+	}
 
-	tmp = 6;
-	fwnode_property_read_u32(ep, "onsemi,t-hs-trail", &tmp);
-	sensor->info.t_hs_trail = clamp_t(unsigned int, tmp, 0, 0xf);
+	for (i = 0; i < data->size_timing2; i++) {
+		tmp = data->timing2[i].value;
+		fwnode_property_read_u32(ep, data->timing2[i].name, &tmp);
+		data->timing2[i].value = clamp_t(unsigned int, tmp, 0,
+						 data->timing2[i].max);
+	}
 
-	tmp = 5;
-	fwnode_property_read_u32(ep, "onsemi,t-clk-trail", &tmp);
-	sensor->info.t_clk_trail = clamp_t(unsigned int, tmp, 0, 0xf);
+	for (i = 0; i < data->size_timing3; i++) {
+		tmp = data->timing3[i].value;
+		fwnode_property_read_u32(ep, data->timing3[i].name, &tmp);
+		data->timing3[i].value = clamp_t(unsigned int, tmp, 0,
+						 data->timing3[i].max);
+	}
 
-	tmp = 1;
-	fwnode_property_read_u32(ep, "onsemi,t-clk-prep", &tmp);
-	sensor->info.t_clk_prep = clamp_t(unsigned int, tmp, 0, 0xf);
-
-	tmp = 4;
-	fwnode_property_read_u32(ep, "onsemi,t-hs-exit", &tmp);
-	sensor->info.t_hs_exit = clamp_t(unsigned int, tmp, 0, 0x3f);
-
-	tmp = 14;
-	fwnode_property_read_u32(ep, "onsemi,t-clk-zero", &tmp);
-	sensor->info.t_clk_zero = clamp_t(unsigned int, tmp, 0, 0x3f);
-
-	tmp = 2;
-	fwnode_property_read_u32(ep, "onsemi,t-bgap", &tmp);
-	sensor->info.t_bgap = clamp_t(unsigned int, tmp, 0, 0xf);
-
-	tmp = 1;
-	fwnode_property_read_u32(ep, "onsemi,t-clk-pre", &tmp);
-	sensor->info.t_clk_pre = clamp_t(unsigned int, tmp, 0, 0x3f);
-
-	tmp = 7;
-	fwnode_property_read_u32(ep, "onsemi,t-clk-post", &tmp);
-	sensor->info.t_clk_post = clamp_t(unsigned int, tmp, 0, 0x3f);
-
-	tmp = 2;
-	fwnode_property_read_u32(ep, "onsemi,t-lpx", &tmp);
-	sensor->info.t_lpx = clamp_t(unsigned int, tmp, 0, 0x3f);
-
-	tmp = 5;
-	fwnode_property_read_u32(ep, "onsemi,t-wakeup", &tmp);
-	sensor->info.t_wakeup = clamp_t(unsigned int, tmp, 0, 0x7f);
-
-	tmp = 0;
-	fwnode_property_read_u32(ep, "onsemi,cont-tx-clk", &tmp);
-	sensor->info.cont_tx_clk = tmp ? true : false;
-
-	tmp = 0;
-	fwnode_property_read_u32(ep, "onsemi,heavy-lp-load", &tmp);
-	sensor->info.heavy_lp_load = tmp ? true : false;
-
-	tmp = 4;
-	fwnode_property_read_u32(ep, "onsemi,t-init", &tmp);
-	sensor->info.t_init = clamp_t(unsigned int, tmp, 0, 0x7f);
+	for (i = 0; i < data->size_timing4; i++) {
+		tmp = data->timing4[i].value;
+		fwnode_property_read_u32(ep, data->timing4[i].name, &tmp);
+		data->timing4[i].value = clamp_t(unsigned int, tmp, 0,
+						 data->timing4[i].max);
+	}
 
 	return 0;
 }
@@ -2627,6 +2653,7 @@ static int ar0144_of_probe(struct ar0144 *sensor)
 {
 	struct device *dev = sensor->dev;
 	struct ar0144_businfo *info = &sensor->info;
+	struct ar0144_model_data *data = sensor->model->data;
 	struct clk *clk;
 	struct gpio_desc *gpio;
 	struct fwnode_handle *ep;
@@ -2674,14 +2701,14 @@ static int ar0144_of_probe(struct ar0144 *sensor)
 	}
 
 	if (info->bus_type == V4L2_MBUS_PARALLEL &&
-	    bus_cfg.link_frequencies[0] > AR0144_MAX_PARALLEL_LINK) {
+	    bus_cfg.link_frequencies[0] > data->max_parallel_link_freq) {
 		dev_err(dev, "Parallel Link frequency exceeds maximum\n");
 		ret = -EINVAL;
 		goto out_put;
 	}
 
 	if (info->bus_type == V4L2_MBUS_CSI2_DPHY &&
-	    bus_cfg.link_frequencies[0] > AR0144_MAX_MIPI_LINK) {
+	    bus_cfg.link_frequencies[0] > data->max_mipi_link_freq) {
 		dev_err(dev, "MIPI Link frequency exceeds maximum\n");
 		ret = -EINVAL;
 		goto out_put;
@@ -2716,7 +2743,7 @@ static int ar0144_probe(struct i2c_client *i2c)
 {
 	struct ar0144 *sensor;
 	struct v4l2_subdev *sd;
-	enum ar0144_model model;
+	struct ar0144_model *model;
 	int ret;
 
 	sensor = devm_kzalloc(&i2c->dev, sizeof(*sensor), GFP_KERNEL);
@@ -2724,9 +2751,9 @@ static int ar0144_probe(struct i2c_client *i2c)
 		return -ENOMEM;
 
 	if (i2c->dev.of_node)
-		model = (enum ar0144_model)device_get_match_data(&i2c->dev);
+		model = (struct ar0144_model *)device_get_match_data(&i2c->dev);
 	else
-		model = i2c_match_id(ar0144_id_table, i2c)->driver_data;
+		model = (void *)i2c_match_id(ar0144_id_table, i2c)->driver_data;
 
 	sd = &sensor->subdev;
 	sensor->model = model;
@@ -2783,10 +2810,94 @@ static int ar0144_remove(struct i2c_client *i2c)
 	return 0;
 }
 
+static const struct ar0144_sensor_limits ar0144_limits = {
+			/* min		max	 */
+	.x		= {0,		1295      },
+	.y		= {0,		807       },
+	.hlen		= {1488,	65534     },
+	.vlen		= {29,		65535     },
+	.hblank		= {208,		65535     },
+	.vblank		= {22,		65535     },
+	.ext_clk	= {6000000,	48000000  },
+};
+
+static struct ar0144_mipi_timing ar0144_timing0[] = {
+	{.name = "onsemi,t-hs-prep", .value = 2, .max = 15, .shift = 12 },
+	{.name = "onsemi,t-hs-zero", .value = 6, .max = 15, .shift = 8 },
+	{.name = "onsemi,t-hs-trail", .value = 6, .max = 15, .shift = 4 },
+	{.name = "onsemi,t-clk-trail", .value = 5, .max = 15, .shift = 0 },
+};
+
+static struct ar0144_mipi_timing ar0144_timing1[] = {
+	{.name = "onsemi,t-clk-prep", .value = 1, .max = 15, .shift = 12 },
+	{.name = "onsemi,t-hs-exit", .value = 4, .max = 63, .shift = 6 },
+	{.name = "onsemi,t-clk-zero", .value = 14, .max = 63, .shift = 0 },
+};
+
+static struct ar0144_mipi_timing ar0144_timing2[] = {
+	{.name = "onsemi,t-bgap", .value = 2, .max = 15, .shift = 12 },
+	{.name = "onsemi,t-clk-pre", .value = 1, .max = 63, .shift = 6 },
+	{.name = "onsemi,t-clk-post", .value = 7, .max = 63, .shift = 0 },
+};
+
+static struct ar0144_mipi_timing ar0144_timing3[] = {
+	{.name = "onsemi,t-lpx", .value = 2, .max = 63, .shift = 7 },
+	{.name = "onsemi,t-wakeup", .value = 5, .max = 127, .shift = 0 },
+};
+
+static struct ar0144_mipi_timing ar0144_timing4[] = {
+	{.name = "onsemi,cont-tx-clk", .value = 0, .max = 1, .shift = 15 },
+	{.name = "onsemi,heavy-lp-load", .value = 0, .max = 1, .shift = 14 },
+	{.name = "onsemi,t-init", .value = 4, .max = 127, .shift = 0 },
+};
+
+struct ar0144_model_data ar0144_data = {
+	.max_lanes = 2,
+	.max_parallel_link_freq = 74250000,
+	.max_mipi_link_freq = 384000000,
+	.max_again = 16000,
+	.def_width = 1280,
+	.def_height = 800,
+	.def_offset_x = 4,
+	.def_offset_y = 4,
+	.timing0 = ar0144_timing0,
+	.size_timing0 = ARRAY_SIZE(ar0144_timing0),
+	.timing1 = ar0144_timing1,
+	.size_timing1 = ARRAY_SIZE(ar0144_timing1),
+	.timing2 = ar0144_timing2,
+	.size_timing2 = ARRAY_SIZE(ar0144_timing2),
+	.timing3 = ar0144_timing3,
+	.size_timing3 = ARRAY_SIZE(ar0144_timing3),
+	.timing4 = ar0144_timing4,
+	.size_timing4 = ARRAY_SIZE(ar0144_timing4),
+	.limits = &ar0144_limits,
+};
+
+struct ar0144_model ar0144_unknown = {
+	.chip = AR0144,
+	.color = AR0144_MODEL_UNKNOWN,
+	.chip_version = AR0144_CHIP_VERSION,
+	.data = &ar0144_data,
+};
+
+struct ar0144_model ar0144_col = {
+	.chip = AR0144,
+	.color = AR0144_MODEL_COLOR,
+	.chip_version = AR0144_CHIP_VERSION,
+	.data = &ar0144_data,
+};
+
+struct ar0144_model ar0144_mono = {
+	.chip = AR0144,
+	.color = AR0144_MODEL_MONOCHROME,
+	.chip_version = AR0144_CHIP_VERSION,
+	.data = &ar0144_data,
+};
+
 static const struct i2c_device_id ar0144_id_table[] = {
-	{ "ar0144", AR0144_MODEL_UNKNOWN },
-	{ "ar0144c", AR0144_MODEL_COLOR },
-	{ "ar0144m", AR0144_MODEL_MONOCHROME },
+	{ "ar0144", (kernel_ulong_t)&ar0144_unknown },
+	{ "ar0144c", (kernel_ulong_t)&ar0144_col },
+	{ "ar0144m", (kernel_ulong_t)&ar0144_mono },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(i2c, ar0144_id_table);
@@ -2794,13 +2905,13 @@ MODULE_DEVICE_TABLE(i2c, ar0144_id_table);
 static const struct of_device_id ar0144_of_match[] = {
 	{
 		.compatible = "onsemi,ar0144",
-		.data = (void *)AR0144_MODEL_UNKNOWN,
+		.data = (void *)&ar0144_unknown,
 	}, {
 		.compatible = "onsemi,ar0144c",
-		.data = (void *)AR0144_MODEL_COLOR,
+		.data = (void *)&ar0144_col,
 	}, {
 		.compatible = "onsemi,ar0144m",
-		.data = (void *)AR0144_MODEL_MONOCHROME,
+		.data = (void *)&ar0144_mono,
 	},
 	{ /* sentinel */ }
 };
