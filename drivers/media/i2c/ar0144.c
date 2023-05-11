@@ -1552,14 +1552,10 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 
 	switch (ctrl->id) {
 	case V4L2_CID_VBLANK:
-		mutex_lock(&sensor->lock);
-
 		if (sensor->is_streaming) {
 			ret = ar0144_group_param_hold(sensor);
-			if (ret) {
-				mutex_unlock(&sensor->lock);
+			if (ret)
 				break;
-			}
 		}
 
 		sensor->vblank = ctrl->val;
@@ -1567,25 +1563,18 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 
 		if (sensor->is_streaming) {
 			ret = ar0144_config_frame(sensor);
-			if (ret) {
-				mutex_unlock(&sensor->lock);
+			if (ret)
 				break;
-			}
 
 			ret = ar0144_group_param_release(sensor);
 		}
 
-		mutex_unlock(&sensor->lock);
 		break;
 	case V4L2_CID_HBLANK:
-		mutex_lock(&sensor->lock);
-
 		if (sensor->is_streaming) {
 			ret = ar0144_group_param_hold(sensor);
-			if (ret) {
-				mutex_unlock(&sensor->lock);
+			if (ret)
 				break;
-			}
 		}
 
 		sensor->hblank = ctrl->val;
@@ -1593,15 +1582,12 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 
 		if (sensor->is_streaming) {
 			ret = ar0144_config_frame(sensor);
-			if (ret) {
-				mutex_unlock(&sensor->lock);
+			if (ret)
 				break;
-			}
 
 			ret = ar0144_group_param_release(sensor);
 		}
 
-		mutex_unlock(&sensor->lock);
 		break;
 	case V4L2_CID_HFLIP:
 		ret = ar0144_update_bits(sensor, AR0144_READ_MODE,
@@ -1749,20 +1735,16 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 					 BIT_PIX_DEF_1D_DDC_EN, val);
 		break;
 	case V4L2_CID_X_TRIGGER_MODE:
-		mutex_lock(&sensor->lock);
 		sensor->trigger = ctrl->val ? true : false;
 
-		if (!sensor->is_streaming) {
-			mutex_unlock(&sensor->lock);
+		if (!sensor->is_streaming)
 			break;
-		}
 
 		if (sensor->trigger)
 			ret = ar0144_start_trigger(sensor);
 		else
 			ret = ar0144_start_stream(sensor);
 
-		mutex_unlock(&sensor->lock);
 		break;
 	default:
 		ret = -EINVAL;
@@ -1779,9 +1761,7 @@ static int ar0144_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
 	int ret;
 	u16 val;
 
-	mutex_lock(&sensor->lock);
 	index = bpp_to_index(sensor->bpp);
-	mutex_unlock(&sensor->lock);
 
 	switch (ctrl->id) {
 	case V4L2_CID_X_AUTO_EXPOSURE_CUR:
@@ -2154,6 +2134,7 @@ static int ar0144_create_ctrls(struct ar0144 *sensor)
 		return ret;
 
 	sensor->subdev.ctrl_handler = &sensor->ctrls;
+	sensor->ctrls.lock = &sensor->lock;
 
 	for (i = 0; i < ARRAY_SIZE(ar0144_ctrls); i++) {
 		ctrl_cfg = ar0144_ctrls[i];
