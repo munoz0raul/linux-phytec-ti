@@ -1607,7 +1607,7 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 
 		/*
 		 * Embedded statistics are always enabled but only shown when
-		 * when the corresponding ctrl is set.
+		 * the corresponding ctrl is set.
 		 */
 		val = ctrl->val & V4L2_X_EMBEDDED_DATA ?
 		       BIT_EMBEDDED_DATA : 0;
@@ -2617,7 +2617,7 @@ static int ar0144_of_probe(struct ar0144 *sensor)
 		if (ret)
 			goto out_put;
 
-		link_freqs[i] = sensor->pll[i].ser_freq;;
+		link_freqs[i] = sensor->pll[i].ser_freq;
 	}
 
 	info->link_freqs = link_freqs;
