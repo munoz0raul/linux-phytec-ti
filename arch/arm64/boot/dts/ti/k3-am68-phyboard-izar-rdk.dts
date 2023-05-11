@@ -294,46 +294,6 @@
 	status = "disabled";
 };
 
-&csi0_port0 {
-	status = "disabled";
-};
-
-&csi0_port1 {
-	status = "disabled";
-};
-
-&csi0_port2 {
-	status = "disabled";
-};
-
-&csi0_port3 {
-	status = "disabled";
-};
-
-&csi0_port4 {
-	status = "disabled";
-};
-
-&csi1_port0 {
-	status = "disabled";
-};
-
-&csi1_port1 {
-	status = "disabled";
-};
-
-&csi1_port2 {
-	status = "disabled";
-};
-
-&csi1_port3 {
-	status = "disabled";
-};
-
-&csi1_port4 {
-	status = "disabled";
-};
-
 &cpsw_port1 {
 	phy-mode = "rgmii-rxid";
 	phy-handle = <&phy0>;
