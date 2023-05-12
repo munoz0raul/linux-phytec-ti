@@ -216,6 +216,12 @@
 		>;
 	};
 
+	pmic_irq_pins_default: pmic-irq-pins-default {
+		pinctrl-single,pins = <
+			J721S2_WKUP_IOPAD(0x060, PIN_INPUT, 7) /* (C21) MCU_OSPI1_CSn1.WKUP_GPIO0_39 */
+		>;
+	};
+
 	vdd_ospi_pins_default: vdd-ospi-pins-default {
 		pinctrl-single,pins = <
 			J721S2_WKUP_IOPAD(0x0cc, PIN_OUTPUT, 7) /* (C27) WKUP_GPIO0_3 */
@@ -523,15 +529,92 @@
 	clock-frequency = <400000>;
 
 	pmic@48 {
-		compatible = "ti,tps6594x";
+		compatible = "ti,tps6594-q1";
 		reg = <0x48>;
+		ti,primary-pmic;
+		system-power-controller;
 
-		gpio {
-			compatible = "ti,tps6594x-gpio";
-		};
+		pinctrl-names = "default";
+		pinctrl-0 = <&pmic_irq_pins_default>;
+		interrupt-parent = <&wkup_gpio0>;
+		interrupts = <39 IRQ_TYPE_EDGE_FALLING>;
 
-		rtc {
-			compatible = "ti,tps6594x-rtc";
+		gpio-controller;
+		#gpio-cells = <2>;
+
+		buck12-supply = <&vcc_3v3>;
+		buck3-supply = <&vcc_3v3>;
+		buck4-supply = <&vcc_3v3>;
+		buck5-supply = <&vcc_3v3>;
+		ldo1-supply = <&vcc_3v3>;
+		ldo2-supply = <&vcc_3v3>;
+		ldo3-supply = <&vcc_3v3>;
+		ldo4-supply = <&vcc_3v3>;
+
+		regulators {
+			bucka12: buck12 {
+				regulator-name = "VDD__DDR_1V1";
+				regulator-min-microvolt = <1100000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			bucka3: buck3 {
+				regulator-name = "VDD_RAM_0V85";
+				regulator-min-microvolt = <850000>;
+				regulator-max-microvolt = <850000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			bucka4: buck4 {
+				regulator-name = "VDD_IO_1V8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			bucka5: buck5 {
+				regulator-name = "VDD_MCU_0V85";
+				regulator-min-microvolt = <850000>;
+				regulator-max-microvolt = <850000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldoa1: ldo1 {
+				regulator-name = "VDD_MCUIO_1V8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldoa2: ldo2 {
+				regulator-name = "VDD_MCUIO_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldoa3: ldo3 {
+				regulator-name = "VDDA_DLL_0V8";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldoa4: ldo4 {
+				regulator-name = "VDDA_MCU_1V8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
 		};
 	};
 
