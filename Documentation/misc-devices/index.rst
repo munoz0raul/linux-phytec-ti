@@ -26,5 +26,6 @@ fit into other categories.
    max6875
    pci-endpoint-test
    spear-pcie-gadget
+   tps6594-pfsm
    uacce
    xilinx_sdfec
