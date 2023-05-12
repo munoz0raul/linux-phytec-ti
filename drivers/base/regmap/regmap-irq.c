@@ -38,6 +38,7 @@ struct regmap_irq_chip_data {
 	unsigned int *wake_buf;
 	unsigned int *type_buf;
 	unsigned int *type_buf_def;
+	unsigned int **config_buf;
 
 	unsigned int irq_reg_stride;
 
@@ -91,7 +92,7 @@ static void regmap_irq_sync_unlock(struct irq_data *data)
 {
 	struct regmap_irq_chip_data *d = irq_data_get_irq_chip_data(data);
 	struct regmap *map = d->map;
-	int i, ret;
+	int i, j, ret;
 	u32 reg;
 	u32 unmask_offset;
 	u32 val;
@@ -213,6 +214,17 @@ static void regmap_irq_sync_unlock(struct irq_data *data)
 		}
 	}
 
+	for (i = 0; i < d->chip->num_config_bases; i++) {
+		for (j = 0; j < d->chip->num_config_regs; j++) {
+			reg = sub_irq_reg(d, d->chip->config_base[i], j);
+			ret = regmap_write(map, reg, d->config_buf[i][j]);
+			if (ret)
+				dev_err(d->map->dev,
+					"Failed to write config %x: %d\n",
+					reg, ret);
+		}
+	}
+
 	if (d->chip->runtime_pm)
 		pm_runtime_put(map->dev);
 
@@ -272,7 +284,7 @@ static int regmap_irq_set_type(struct irq_data *data, unsigned int type)
 	struct regmap_irq_chip_data *d = irq_data_get_irq_chip_data(data);
 	struct regmap *map = d->map;
 	const struct regmap_irq *irq_data = irq_to_regmap_irq(d, data->hwirq);
-	int reg;
+	int reg, ret;
 	const struct regmap_irq_type *t = &irq_data->type;
 
 	if ((t->types_supported & type) != type)
@@ -311,6 +323,14 @@ static int regmap_irq_set_type(struct irq_data *data, unsigned int type)
 	default:
 		return -EINVAL;
 	}
+
+	if (d->chip->set_type_config) {
+		ret = d->chip->set_type_config(d->config_buf, type,
+					       irq_data, reg);
+		if (ret)
+			return ret;
+	}
+
 	return 0;
 }
 
@@ -576,6 +596,61 @@ static const struct irq_domain_ops regmap_domain_ops = {
 };
 
 /**
+ * regmap_irq_set_type_config_simple() - Simple IRQ type configuration callback.
+ * @buf: Buffer containing configuration register values, this is a 2D array of
+ *       `num_config_bases` rows, each of `num_config_regs` elements.
+ * @type: The requested IRQ type.
+ * @irq_data: The IRQ being configured.
+ * @idx: Index of the irq's config registers within each array `buf[i]`
+ *
+ * This is a &struct regmap_irq_chip->set_type_config callback suitable for
+ * chips with one config register. Register values are updated according to
+ * the &struct regmap_irq_type data associated with an IRQ.
+ */
+int regmap_irq_set_type_config_simple(unsigned int **buf, unsigned int type,
+				      const struct regmap_irq *irq_data, int idx)
+{
+	const struct regmap_irq_type *t = &irq_data->type;
+
+	if (t->type_reg_mask)
+		buf[0][idx] &= ~t->type_reg_mask;
+	else
+		buf[0][idx] &= ~(t->type_falling_val |
+				 t->type_rising_val |
+				 t->type_level_low_val |
+				 t->type_level_high_val);
+
+	switch (type) {
+	case IRQ_TYPE_EDGE_FALLING:
+		buf[0][idx] |= t->type_falling_val;
+		break;
+
+	case IRQ_TYPE_EDGE_RISING:
+		buf[0][idx] |= t->type_rising_val;
+		break;
+
+	case IRQ_TYPE_EDGE_BOTH:
+		buf[0][idx] |= (t->type_falling_val |
+				t->type_rising_val);
+		break;
+
+	case IRQ_TYPE_LEVEL_HIGH:
+		buf[0][idx] |= t->type_level_high_val;
+		break;
+
+	case IRQ_TYPE_LEVEL_LOW:
+		buf[0][idx] |= t->type_level_low_val;
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(regmap_irq_set_type_config_simple);
+
+/**
  * regmap_add_irq_chip_fwnode() - Use standard regmap IRQ controller handling
  *
  * @fwnode: The firmware node where the IRQ domain should be added to.
@@ -680,6 +755,24 @@ int regmap_add_irq_chip_fwnode(struct fwnode_handle *fwnode,
 				      GFP_KERNEL);
 		if (!d->type_buf)
 			goto err_alloc;
+	}
+
+	if (chip->num_config_bases && chip->num_config_regs) {
+		/*
+		 * Create config_buf[num_config_bases][num_config_regs]
+		 */
+		d->config_buf = kcalloc(chip->num_config_bases,
+					sizeof(*d->config_buf), GFP_KERNEL);
+		if (!d->config_buf)
+			goto err_alloc;
+
+		for (i = 0; i < chip->num_config_regs; i++) {
+			d->config_buf[i] = kcalloc(chip->num_config_regs,
+						   sizeof(**d->config_buf),
+						   GFP_KERNEL);
+			if (!d->config_buf[i])
+				goto err_alloc;
+		}
 	}
 
 	d->irq_chip = regmap_irq_chip;
@@ -838,6 +931,11 @@ int regmap_add_irq_chip_fwnode(struct fwnode_handle *fwnode,
 err_domain:
 	/* Should really dispose of the domain but... */
 err_alloc:
+	if (d->config_buf) {
+		for (i = 0; i < chip->num_config_bases; i++)
+			kfree(d->config_buf[i]);
+		kfree(d->config_buf);
+	}
 	kfree(d->type_buf);
 	kfree(d->type_buf_def);
 	kfree(d->wake_buf);
@@ -885,7 +983,7 @@ EXPORT_SYMBOL_GPL(regmap_add_irq_chip);
 void regmap_del_irq_chip(int irq, struct regmap_irq_chip_data *d)
 {
 	unsigned int virq;
-	int hwirq;
+	int i, hwirq;
 
 	if (!d)
 		return;
@@ -915,6 +1013,11 @@ void regmap_del_irq_chip(int irq, struct regmap_irq_chip_data *d)
 	kfree(d->mask_buf);
 	kfree(d->status_reg_buf);
 	kfree(d->status_buf);
+	if (d->config_buf) {
+		for (i = 0; i < d->chip->num_config_bases; i++)
+			kfree(d->config_buf[i]);
+		kfree(d->config_buf);
+	}
 	kfree(d);
 }
 EXPORT_SYMBOL_GPL(regmap_del_irq_chip);
