@@ -40,7 +40,6 @@ struct regmap_irq_chip_data {
 	unsigned int *type_buf_def;
 
 	unsigned int irq_reg_stride;
-	unsigned int type_reg_stride;
 
 	unsigned int clear_status:1;
 };
@@ -700,11 +699,6 @@ int regmap_add_irq_chip_fwnode(struct fwnode_handle *fwnode,
 		d->irq_reg_stride = chip->irq_reg_stride;
 	else
 		d->irq_reg_stride = 1;
-
-	if (chip->type_reg_stride)
-		d->type_reg_stride = chip->type_reg_stride;
-	else
-		d->type_reg_stride = 1;
 
 	if (!map->use_single_read && map->reg_stride == 1 &&
 	    d->irq_reg_stride == 1) {
