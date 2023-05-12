@@ -2272,6 +2272,10 @@ out:
 
 		kfree(wval);
 	}
+
+	if (!ret)
+		trace_regmap_bulk_write(map, reg, val, val_bytes * val_count);
+
 	return ret;
 }
 EXPORT_SYMBOL_GPL(regmap_bulk_write);
@@ -3012,6 +3016,9 @@ int regmap_bulk_read(struct regmap *map, unsigned int reg, void *val,
 out:
 		map->unlock(map->lock_arg);
 	}
+
+	if (!ret)
+		trace_regmap_bulk_read(map, reg, val, val_bytes * val_count);
 
 	return ret;
 }
