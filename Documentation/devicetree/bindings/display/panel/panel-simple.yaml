@@ -127,6 +127,7 @@ properties:
       - edt,etm070080dh6
         # Emerging Display Technology Corp. 10.1" LVDS WXGA TFT Display with capacitive touch
       - edt,etml1010g0dk
+      - edt,etml1010g3dra
         # Evervision Electronics Co. Ltd. VGG804821 5.0" WVGA TFT LCD Panel
       - evervision,vgg804821
         # Foxlink Group 5" WVGA TFT LCD panel
