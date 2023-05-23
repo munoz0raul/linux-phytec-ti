@@ -136,6 +136,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-j721e-fpdlink-imx390-rcm-1-2.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-j721e-fpdlink-imx390-rcm-1-3.dtbo
 
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-phyboard-lyra-rdk.dtb
+dtb-$(CONFIG_ARCH_K3) += k3-am62a-phyboard-lyra-rpmsg.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-sk.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-fpdlink-sk-fusion.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-fpdlink-ov2312-0-0.dtbo
