@@ -55,12 +55,6 @@
 			linux,code = <KEY_MENU>;
 			gpios = <&gpio_exp 4 GPIO_ACTIVE_HIGH>;
 		};
-
-		key-power {
-			label = "power";
-			linux,code = <KEY_POWER>;
-			gpios = <&main_gpio0 42 GPIO_ACTIVE_LOW>;
-		};
 	};
 
 	hdmi_connector: connector {
@@ -159,7 +153,6 @@
 	gpio_keys_pins_default: gpio-keys-pins-default {
 		pinctrl-single,pins = <
 			AM62AX_IOPAD(0x1d4, PIN_INPUT, 7) /* (B15) UART0_RTSn.GPIO1_23 */
-			AM62AX_IOPAD(0x0ac, PIN_INPUT, 7) /* (B15) GPMC0_CSn0.GPIO0_41 */
 		>;
 	};
 
