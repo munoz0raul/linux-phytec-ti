@@ -20,7 +20,15 @@ dtb-$(CONFIG_SOC_DRA7XX) += \
 	dra72-evm.dtb \
 	dra72-evm-revc.dtb \
 	dra76-evm.dtb \
-	dra7-evm.dtb
+	dra7-evm.dtb \
+	am57xx-phytec-pcm-948.dtb \
+	am5716-phytec-pcm-948-10203111I.dtb \
+	am5726-phytec-pcm-948-40201111I.dtb \
+	am5728-phytec-pcm-948-40300111I.dtb \
+	am5728-phytec-pcm-948-40A00111I.dtb \
+	am5728-phytec-pcm-948-50500111I.dtb \
+	am5729-phytec-pcm-948-10306111I.dtb \
+	am5749-phytec-pcm-948-32302111I.dtb
 
 # overlays
 dtb-$(CONFIG_SOC_DRA7XX) += \
@@ -39,7 +47,14 @@ dtb-$(CONFIG_SOC_DRA7XX) += \
 	dra71-evm-nand.dtb \
 	ov10635.dtbo \
 	ov2659-am571x.dtbo \
-	ov2659-am572x.dtbo
+	ov2659-am572x.dtbo \
+	am57xx-phytec-pcm-948-gpio-fan.dtbo \
+	am57xx-phytec-pcm-948-x28-spidev.dtbo \
+	am57xx-phytec-pcm-948-lcd-017.dtbo \
+	am57xx-phytec-pcm-948-lcd-018.dtbo \
+	am57xx-phytec-pcm-948-vm-009.dtbo \
+	am57xx-phytec-pcm-948-vm-011.dtbo \
+	am57xx-phytec-pcm-948-wlan-wilink8.dtbo
 
 $(obj)/%.dtb: $(src)/../%.dts FORCE
 	$(call if_changed_dep,dtc,dtb)
