@@ -167,6 +167,10 @@
 	};
 };
 
+&mcu_gpio0 {
+	status = "okay";
+};
+
 &mcu_i2c0 {
 	status = "disabled";
 };
