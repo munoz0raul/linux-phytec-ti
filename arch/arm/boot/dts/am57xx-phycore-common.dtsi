@@ -34,21 +34,21 @@
 		#size-cells = <2>;
 		ranges;
 
-		dsp1_memory_region: dsp1-memory@97800000 {
+		dsp1_memory_region: dsp1-memory@99000000 {
 			compatible = "shared-dma-pool";
-			reg = <0x0 0x97800000 0x0 0x4000000>;
+			reg = <0x0 0x99000000 0x0 0x4000000>;
 			reusable;
 		};
 
-		ipu1_memory_region: ipu1-memory@95800000 {
+		ipu1_memory_region: ipu1-memory@9d000000 {
 			compatible = "shared-dma-pool";
-			reg = <0x0 0x95800000 0x0 0x2000000>;
+			reg = <0x0 0x9d000000 0x0 0x2000000>;
 			reusable;
 		};
 
-		ipu2_memory_region: ipu2-memory@9b800000 {
+		ipu2_memory_region: ipu2-memory@95800000 {
 			compatible = "shared-dma-pool";
-			reg = <0x0 0x9b800000 0x0 0x3800000>;
+			reg = <0x0 0x95800000 0x0 0x3800000>;
 			reusable;
 		};
 	};
