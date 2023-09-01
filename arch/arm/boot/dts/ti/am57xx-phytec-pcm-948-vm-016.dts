@@ -24,6 +24,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&cam_pins_default &cam_pins_iodelay_conf>;
 		reset-gpios = <&gpio8 2 GPIO_ACTIVE_LOW>;
+		onsemi,extra-wait-after-reset = <50000>;
 
 		clock-names = "ext";
 		clocks = <&cam_ext_mclk>;
