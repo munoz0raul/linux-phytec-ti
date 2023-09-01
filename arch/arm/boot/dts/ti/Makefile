@@ -54,6 +54,7 @@ dtb-$(CONFIG_SOC_DRA7XX) += \
 	am57xx-phytec-pcm-948-lcd-018.dtbo \
 	am57xx-phytec-pcm-948-vm-009.dtbo \
 	am57xx-phytec-pcm-948-vm-011.dtbo \
+	am57xx-phytec-pcm-948-vm-016.dtbo \
 	am57xx-phytec-pcm-948-wlan-wilink8.dtbo
 
 $(obj)/%.dtb: $(src)/../%.dts FORCE
