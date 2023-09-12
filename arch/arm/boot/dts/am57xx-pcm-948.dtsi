@@ -230,8 +230,8 @@
 
 	gpio_keys_pins_default: gpio_keys_pins_default {
 		pinctrl-single,pins = <
-			DRA7XX_CORE_IOPAD(0x1450, PIN_INPUT | MUX_MODE14)  /* (P6) gpmc_a4.gpio1_26 */
-			DRA7XX_CORE_IOPAD(0x1454, PIN_INPUT | MUX_MODE14)  /* (R9) gpmc_a5.gpio1_27 */
+			DRA7XX_CORE_IOPAD(0x3450, PIN_INPUT | MUX_MODE14)  /* (P6) gpmc_a4.gpio1_26 */
+			DRA7XX_CORE_IOPAD(0x3454, PIN_INPUT | MUX_MODE14)  /* (R9) gpmc_a5.gpio1_27 */
 		>;
 	};
 
