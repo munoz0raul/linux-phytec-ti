@@ -15,6 +15,7 @@
 
 / {
 	aliases {
+		mmc1 = &mmc2;
 		rtc0 = &i2c_som_rtc;
 		rtc1 = &rtc;
 		rtc2 = &i2c_pmic_rtc;
