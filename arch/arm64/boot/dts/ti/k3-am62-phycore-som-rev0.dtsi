@@ -88,11 +88,6 @@
 			alignment = <0x1000>;
 			no-map;
 		};
-
-		framebuffer: framebuffer@ff700000 {
-			reg = <0x00 0xff700000 0x00 0x008ca000>;
-			no-map;
-		};
 	};
 
 	vcc_5v0_som: fixedregulator-vcc-5v0-som {
