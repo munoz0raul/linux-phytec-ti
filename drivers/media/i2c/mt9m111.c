@@ -233,6 +233,7 @@ struct mt9m111 {
 	struct mt9m111_context *ctx;
 	struct v4l2_rect rect;	/* cropping rectangle */
 	struct v4l2_clk *clk;
+	struct gpio_desc *reset;
 	unsigned int width;	/* output */
 	unsigned int height;	/* sizes */
 	struct v4l2_fract frame_interval;
@@ -977,6 +978,12 @@ static int mt9m111_power_on(struct mt9m111 *mt9m111)
 	struct i2c_client *client = v4l2_get_subdevdata(&mt9m111->subdev);
 	int ret;
 
+	/* Ensure RESET_BAR is active */
+	if (mt9m111->reset) {
+		gpiod_set_value(mt9m111->reset, 1);
+		usleep_range(1000, 2000);
+	}
+
 	ret = v4l2_clk_enable(mt9m111->clk);
 	if (ret < 0)
 		return ret;
@@ -984,6 +991,12 @@ static int mt9m111_power_on(struct mt9m111 *mt9m111)
 	ret = regulator_enable(mt9m111->regulator);
 	if (ret < 0)
 		goto out_clk_disable;
+
+	/* Set RESET_BAR high (de-assert) */
+	if (mt9m111->reset) {
+		gpiod_set_value(mt9m111->reset, 0);
+		usleep_range(1000, 2000);
+	}
 
 	ret = mt9m111_resume(mt9m111);
 	if (ret < 0)
@@ -1006,6 +1019,13 @@ static void mt9m111_power_off(struct mt9m111 *mt9m111)
 {
 	mt9m111_suspend(mt9m111);
 	regulator_disable(mt9m111->regulator);
+
+	/* Ensure RESET_BAR is active */
+	if (mt9m111->reset) {
+		gpiod_set_value(mt9m111->reset, 1);
+		usleep_range(1000, 2000);
+	}
+
 	v4l2_clk_disable(mt9m111->clk);
 }
 
@@ -1270,6 +1290,9 @@ static int mt9m111_probe(struct i2c_client *client)
 	mt9m111->clk = v4l2_clk_get(&client->dev, "mclk");
 	if (IS_ERR(mt9m111->clk))
 		return PTR_ERR(mt9m111->clk);
+
+	mt9m111->reset = devm_gpiod_get_optional(&client->dev, "reset",
+						 GPIOD_OUT_LOW);
 
 	if (mt9m111->clk) {
 		if (!of_property_read_u32(client->dev.of_node,
