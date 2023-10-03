@@ -28,8 +28,6 @@
 		port {
 			mt9p031_ep: endpoint {
 				remote-endpoint = <&vin3a_vm011_ep>;
-				hsync-active = <1>;
-				vsync-active = <1>;
 				pclk-sample = <0>;
 				bus-width = <8>;
 				input-clock-frequency = <26000000>;
@@ -42,6 +40,8 @@
 &vin3a {
 	vin3a_vm011_ep: endpoint {
 		remote-endpoint = <&mt9p031_ep>;
+		hsync-active = <1>;
+		vsync-active = <1>;
 		slave-mode;
 	};
 };
