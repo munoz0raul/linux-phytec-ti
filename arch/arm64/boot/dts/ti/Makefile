@@ -51,6 +51,7 @@ dtb-$(CONFIG_ARCH_K3) += k3-am62a7-sk-ethernet-dc01.dtbo
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-sk-fusion-imx390.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-sk-fusion-ov2312.dtb
 dtb-$(CONFIG_ARCH_K3) += k3-am62a7-sk-ub954-evm-ov2312.dtb
+dtb-$(CONFIG_ARCH_K3) += k3-am62a7-phyboard-lyra-rdk.dtb
 
 # Boards with AM62Px SoC
 dtb-$(CONFIG_ARCH_K3) += k3-am62p5-sk.dtb
