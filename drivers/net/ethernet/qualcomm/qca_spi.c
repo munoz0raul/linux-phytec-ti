@@ -685,7 +685,7 @@ qcaspi_netdev_open(struct net_device *dev)
 				      qca, "%s", dev->name);
 
 	if (IS_ERR(qca->spi_thread)) {
-		dev_info(dev, "%s: unable to start kernel thread.\n",
+		netdev_info(qca->net_dev, "%s: unable to start kernel thread.\n",
 			   QCASPI_DRV_NAME);
 		return PTR_ERR(qca->spi_thread);
 	}
@@ -693,7 +693,7 @@ qcaspi_netdev_open(struct net_device *dev)
 	ret = request_irq(qca->spi_dev->irq, qcaspi_intr_handler, 0,
 			  dev->name, qca);
 	if (ret) {
-		dev_info(dev, "%s: unable to get IRQ %d (irqval=%d).\n",
+		netdev_info(qca->net_dev, "%s: unable to get IRQ %d (irqval=%d).\n",
 			   QCASPI_DRV_NAME, qca->spi_dev->irq, ret);
 		kthread_stop(qca->spi_thread);
 		return ret;
