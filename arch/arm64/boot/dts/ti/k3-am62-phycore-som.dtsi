@@ -270,14 +270,14 @@
 		>;
 	};
 
-	main_spi0_pins_default: main_spi0_pins_default {
-		pinctrl-single,pins = <
-			AM62X_IOPAD(0x1BC, PIN_INPUT, 0) /* (A14) SPI0_CLK */
-			AM62X_IOPAD(0x1B4, PIN_OUTPUT, 0) /* (A13) SPI0_CS0 */
-			AM62X_IOPAD(0x1C0, PIN_OUTPUT, 0) /* (B13) SPI0_D0 */
-			AM62X_IOPAD(0x1C4, PIN_INPUT, 0)  /* (B14) SPI0_D1 */
-			AM62X_IOPAD(0x194, PIN_INPUT, 7)  /* (B19) MCASP0_AXR3 */
-		>;
+	main_spi0_pins_default: main-spi0-pins-default {
+			pinctrl-single,pins = <
+					AM62X_IOPAD(0x01bc, PIN_INPUT, 0)	 /* (A14) SPI0_CLK */
+					AM62X_IOPAD(0x01b4, PIN_OUTPUT, 0)	 /* (A13) SPI0_CS0 */
+					AM62X_IOPAD(0x01c0, PIN_OUTPUT, 0)	 /* (B13) SPI0_D0 */
+					AM62X_IOPAD(0x01c4, PIN_INPUT, 0)	 /* (B14) SPI0_D1 */
+					AM62X_IOPAD(0x194, PIN_INPUT, 7)	 /* (N20) MCASP0_AXR3.GPIO1_7 */
+			>;
 	};
 
 	pmic_irq_pins_default: pmic-irq-pins-default {
@@ -354,24 +354,25 @@
 };
 
 
-&main_spi0 {
+&main_spi0{
 	#address-cells = <1>;
 	#size-cells = <0>;
+
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_spi0_pins_default>;
 	ti,pindir-d0-out-d1-in = <1>;
 
-	qca7000: ethernet@1 {
-		compatible = "qca,qca7000";
-		reg = <0x0>; // chip select wired to CS0
-		// interrupt should be GPIO1_7 (MCASP0_AXR3)
-		interrupt-parent = <&main_gpio1>;
-		interrupts = <7 0x1>; // index 7, rising edge
-		spi-cpha;
-		spi-cpol;
-		spi-max-frequency = <8000000>;
-		local-mac-address = [ A0 B0 C0 D0 E0 F0 ];
+	qca7000: qca7000@0 {
+			status = "okay";
+			compatible = "qca,qca7000";
+			reg = <0x0>;
+			pinctrl-names = "default";
+			interrupt-parent = <&main_gpio1>;
+			interrupts = <7 0x1>;
+			spi-max-frequency = <8000000>;
+			spi-cpha;
+			spi-cpol;
 	};
 };
 
