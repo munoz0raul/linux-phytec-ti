@@ -685,7 +685,7 @@ qcaspi_netdev_open(struct net_device *dev)
 				      qca, "%s", dev->name);
 
 	if (IS_ERR(qca->spi_thread)) {
-		netdev_err(dev, "%s: unable to start kernel thread.\n",
+		dev_info(dev, "%s: unable to start kernel thread.\n",
 			   QCASPI_DRV_NAME);
 		return PTR_ERR(qca->spi_thread);
 	}
@@ -693,7 +693,7 @@ qcaspi_netdev_open(struct net_device *dev)
 	ret = request_irq(qca->spi_dev->irq, qcaspi_intr_handler, 0,
 			  dev->name, qca);
 	if (ret) {
-		netdev_err(dev, "%s: unable to get IRQ %d (irqval=%d).\n",
+		dev_info(dev, "%s: unable to get IRQ %d (irqval=%d).\n",
 			   QCASPI_DRV_NAME, qca->spi_dev->irq, ret);
 		kthread_stop(qca->spi_thread);
 		return ret;
@@ -893,45 +893,53 @@ qca_spi_probe(struct spi_device *spi)
 	u16 signature;
 	int ret;
 
+	dev_info(&spi->dev, "Iniciando Driver\n");
+
 	if (!spi->dev.of_node) {
-		dev_err(&spi->dev, "Missing device tree\n");
+		dev_info(&spi->dev, "Missing device tree\n");
 		return -EINVAL;
 	}
 
 	legacy_mode = of_property_read_bool(spi->dev.of_node,
 					    "qca,legacy-mode");
 
+	dev_info(&spi->dev, "legacy_mode = %d\n", legacy_mode);
+
+	dev_info(&spi->dev, "qcaspi_clkspeed = %d\n", qcaspi_clkspeed);
+
 	if (qcaspi_clkspeed == 0) {
 		if (spi->max_speed_hz)
 			qcaspi_clkspeed = spi->max_speed_hz;
+			dev_info(&spi->dev, "qcaspi_clkspeed = %d\n", qcaspi_clkspeed);
 		else
 			qcaspi_clkspeed = QCASPI_CLK_SPEED;
+			dev_info(&spi->dev, "qcaspi_clkspeed = QCASPI_CLK_SPEED = %d\n", qcaspi_clkspeed);
 	}
 
 	if ((qcaspi_clkspeed < QCASPI_CLK_SPEED_MIN) ||
 	    (qcaspi_clkspeed > QCASPI_CLK_SPEED_MAX)) {
-		dev_err(&spi->dev, "Invalid clkspeed: %d\n",
+		dev_info(&spi->dev, "Invalid clkspeed: %d\n",
 			qcaspi_clkspeed);
 		return -EINVAL;
 	}
 
 	if ((qcaspi_burst_len < QCASPI_BURST_LEN_MIN) ||
 	    (qcaspi_burst_len > QCASPI_BURST_LEN_MAX)) {
-		dev_err(&spi->dev, "Invalid burst len: %d\n",
+		dev_info(&spi->dev, "Invalid burst len: %d\n",
 			qcaspi_burst_len);
 		return -EINVAL;
 	}
 
 	if ((qcaspi_pluggable < QCASPI_PLUGGABLE_MIN) ||
 	    (qcaspi_pluggable > QCASPI_PLUGGABLE_MAX)) {
-		dev_err(&spi->dev, "Invalid pluggable: %d\n",
+		dev_info(&spi->dev, "Invalid pluggable: %d\n",
 			qcaspi_pluggable);
 		return -EINVAL;
 	}
 
 	if (wr_verify < QCASPI_WRITE_VERIFY_MIN ||
 	    wr_verify > QCASPI_WRITE_VERIFY_MAX) {
-		dev_err(&spi->dev, "Invalid write verify: %d\n",
+		dev_info(&spi->dev, "Invalid write verify: %d\n",
 			wr_verify);
 		return -EINVAL;
 	}
@@ -942,16 +950,22 @@ qca_spi_probe(struct spi_device *spi)
 		 qcaspi_burst_len,
 		 qcaspi_pluggable);
 
+	dev_info(&spi->dev, "spi_setup - antes\n");
+
 	spi->mode = SPI_MODE_3;
 	spi->max_speed_hz = qcaspi_clkspeed;
 	if (spi_setup(spi) < 0) {
-		dev_err(&spi->dev, "Unable to setup SPI device\n");
+		dev_info(&spi->dev, "Unable to setup SPI device\n");
 		return -EFAULT;
 	}
+
+	dev_info(&spi->dev, "alloc_etherdev - antes\n");
 
 	qcaspi_devs = alloc_etherdev(sizeof(struct qcaspi));
 	if (!qcaspi_devs)
 		return -ENOMEM;
+	
+	dev_info(&spi->dev, "alloc_etherdev - depois\n");
 
 	qcaspi_netdev_setup(qcaspi_devs);
 	SET_NETDEV_DEV(qcaspi_devs, &spi->dev);
@@ -982,7 +996,7 @@ qca_spi_probe(struct spi_device *spi)
 		qcaspi_read_register(qca, SPI_REG_SIGNATURE, &signature);
 
 		if (signature != QCASPI_GOOD_SIGNATURE) {
-			dev_err(&spi->dev, "Invalid signature (0x%04X)\n",
+			dev_info(&spi->dev, "Invalid signature (0x%04X)\n",
 				signature);
 			free_netdev(qcaspi_devs);
 			return -EFAULT;
@@ -990,7 +1004,7 @@ qca_spi_probe(struct spi_device *spi)
 	}
 
 	if (register_netdev(qcaspi_devs)) {
-		dev_err(&spi->dev, "Unable to register net device %s\n",
+		dev_info(&spi->dev, "Unable to register net device %s\n",
 			qcaspi_devs->name);
 		free_netdev(qcaspi_devs);
 		return -EFAULT;
