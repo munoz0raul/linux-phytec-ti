@@ -908,12 +908,14 @@ qca_spi_probe(struct spi_device *spi)
 	dev_info(&spi->dev, "qcaspi_clkspeed = %d\n", qcaspi_clkspeed);
 
 	if (qcaspi_clkspeed == 0) {
-		if (spi->max_speed_hz)
+		if (spi->max_speed_hz) {
 			qcaspi_clkspeed = spi->max_speed_hz;
 			dev_info(&spi->dev, "qcaspi_clkspeed = %d\n", qcaspi_clkspeed);
-		else
+		}
+		else {
 			qcaspi_clkspeed = QCASPI_CLK_SPEED;
 			dev_info(&spi->dev, "qcaspi_clkspeed = QCASPI_CLK_SPEED = %d\n", qcaspi_clkspeed);
+		}
 	}
 
 	if ((qcaspi_clkspeed < QCASPI_CLK_SPEED_MIN) ||
