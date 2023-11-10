@@ -451,7 +451,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_uart1_pins_default>;
 	/* Main UART1 may be used by TIFS firmware */
-	status = "okay";
+	status = "disabled";
 };
 
 &mcasp2 {
